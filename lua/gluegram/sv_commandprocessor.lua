@@ -1,3 +1,9 @@
+--[[-------------------------------------------------------------------------
+TODO СДЕЛАТЬ ПРИВЯЗКУ КОМАНД К БОТУ
+Ибо не определить кто должен обрабатывать /login, например
+---------------------------------------------------------------------------]]
+
+
 -- DO NOT REFRESH THE FILE
 local cmds = {}
 
@@ -62,13 +68,48 @@ end
 
 --------------------------------
 
-function CMD:Call(MSG)
-	self.func(MSG)
+function CMD:Call(MSG,tArgs)
+	self.func(MSG,tArgs)
+end
+
+------------------------------------------------------------------------------------------------
+
+
+
+
+local cusrs = {} -- connected users chat ids
+function TLG.connect(iChatID)
+	if !cusrs[iChatID] then
+		cusrs[iChatID] = true
+		TG.SendMessage(iChatID, string.format("Вы присоединились к %s.\nMOTD: %s",TLG.CFG.SVName,TLG.CFG.MOTD))
+	else
+		TG.SendMessage(iChatID, string.format("Сервер (%s) уже активен",TLG.CFG.SVNAME))
+	end
+end
+function TLG.disconnect(iChatID)
+	if cusrs[iChatID] then
+		cusrs[iChatID] = nil
+		TG.SendMessage(iChatID, string.format("Вы отключены от %s",TLG.CFG.SVNAME))
+	else -- вы не авторизированы
+		TG.SendMessage(iChatID, string.format("Соединение с (%s) не активно",TLG.CFG.SVNAME))
+	end
 end
 
 
 
 
+
+
+local function processCommand(cmd,MSG,tArgs)
+	local C = cmds[cmd]
+
+
+
+
+
+	C:Call(MSG,tArgs)
+	-- "testasdfjhk asdf asd" in tArgs
+end
 
 local function table_remove(tab,index)
 	local ntab = {}
@@ -84,25 +125,50 @@ end
 
 -- EXAMPLE: /login@my_info_bot testasdfjhk asdf asd
 hook.Add("TLG.OnUpdate","CommandProcessor",function(UPD)
-	if UPD["message"]["text"] and UPD["message"]["text"][1] == "/" then
+	if UPD["message"]["text"] and UPD["message"]["text"][1] == "/" then -- если команда
 
-		local parts = UPD["message"]["text"][1]:Split(" ") -- (/login@my_info_bot)[1]
-		local cmd = parts[1]:Split("@")[1]:sub(2)
-		if cmds[cmd] then
-			local C = cmds[cmd]
+		-- Обработка нескольких команд в одном сообщении
+		local parts = string.Explode(";",UPD["message"]["text"])
+		for i = 1,math.Clamp(#parts,0,5) do -- ограничиваем для предотвращения абуза
+			parts[i] = parts[i]:Trim() -- /cmd;  ; /cmd"
+			if parts[i] == "" then continue end
 
-			-- Игнорируем обработку, если нужен мастер сервер, а мы им не являемся
-			if C:ForMaster() and !TLG.CFG.isMasterServer then
-				return
+			local pieces = parts[i]:Split(" ")
+			local cmd = pieces[1]:Split("@")[1]:sub(2) -- /cmd@botname
+
+			if cmds[cmd] then
+
+				-- Игнорируем обработку, если нужен мастер сервер, а мы им не являемся
+				if cmds[cmd]:ForMaster() and !TLG.CFG.isMasterServer then
+					return
+				end
+
+				-- Нужна авторизация
+				if !cmds[cmd]:IsPublic() then
+
+				end
+
+
+				processCommand(cmd,UPD:Message(), table_remove(pieces,1))
+
+			else
+				-- команды cmd не существует
 			end
-
-			-- Нужна авторизация
-			if !C:IsPublic() then
-				
-			end
-
-			C:Call(UPD:Message(), table_remove(parts,1))
-			-- "testasdfjhk asdf asd" in args
 		end
 	end
 end)
+
+
+TLG.NewCommand("login",function(MSG,args)
+	if !args[1] then
+		TG.SendMessage(chat, "Нужно ввести кодовое название сервера. Пример: /login prisma")
+		return
+	end
+
+	if args[1]:lower() == TLG.CFG.SVNAME or args[1] == "*" then
+		--TLG.connect(chat)
+	end
+end)
+	:SetPublic(true)
+	:SetHelp("/login *")
+	:SetDescription("Авторизация на указанном в аргументах сервере. Список доступных серверов: /servers")

@@ -101,7 +101,7 @@ end
 TLG.addCommand(
 	"sidinf",
 	function(chat, msgtbl)
-		TG.sendChatAction(chat, "typing")
+--		TG.sendChatAction(chat, "typing")
 
 		local sid = msgtbl[2]
 

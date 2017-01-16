@@ -18,29 +18,6 @@ function TLG.addCommand(cmd, func, desc, nolog, ccheck)
 	TLG.CMDS[cmd].nologin = nolog
 end
 
-local cusrs = {} -- connected users chat ids
-function TLG.connect(chid)
-	if !cusrs[chid] then
-		cusrs[chid] = true
-		TG.SendMessage(chid, string.format(l.on_connect,c.SVName,c.MOTD))
-	else
-		TG.SendMessage(chid, string.format(l.on_connect_err,c.SVName))
-	end
-end
-function TLG.disconnect(chid, manually)
-	if cusrs[chid] then
-		cusrs[chid] = nil
-
-		if manually or (!manually and !c.noEchoOnDisconnect) then
-			TG.SendMessage(chid, string.format(l.on_disconnect,c.SVName))
-		end
-
-	else -- вы не авторизированы
-		if c.totalServers > 1 then
-			TG.SendMessage(chid, string.format(l.on_disconnect_err,c.SVName))
-		end
-	end
-end
 
 local last_msgs = {}
 function TLG.processTXT(uid, chid, nick, txt)
@@ -65,7 +42,7 @@ function TLG.processTXT(uid, chid, nick, txt)
 				end
 
 				-- Если нужна авторизация, а мы не авторизированы
-				if !TLG.CMDS[cmd].nologin and !cusrs[chid] then
+				if !TLG.CMDS[cmd].nologin --[[ and !cusrs[chid]--]]  then
 					if c.totalServers < 2 then
 						TG.SendMessage(chid, l.not_logged)
 					end
@@ -134,7 +111,7 @@ function TLG.processTXT(uid, chid, nick, txt)
 
 	-- Сбрасываем таймер автоотключения
 	timer.Create("TLG.AutoDisconnect" .. chid,c.DiscTime,1,function()
-		if table.Count(cusrs) == 0 then return end
+		if table.Count(--[[ cusrs --]] {}) == 0 then return end
 		TLG.disconnect(chid)
 	end)
 end
@@ -209,58 +186,6 @@ local function processUpdate(json)
 		TLG.processTXT(from_id, tab["message"]["chat"]["id"], from_nick, msg)
 	end
 end
-
-
-
-require("bromsock")
-
-local function SetReceiver()
-	ssock = BromSock(BROMSOCK_TCP)
-
-	if !ssock:Listen(c.SocksListenPort) then
-		MsgC(Color(200,50,50),"TLG Socket not opened\n")
-		TLG.notifyGroup("root","Сокет для телеграмма не открылся и не готов принимать сообщения")
-	else
-		MsgC(Color(50,200,50),"TLG Socket successfuly set\n")
-		ssock:SetCallbackAccept(function(l_ssock, l_csock)
-			--print("Sock IP: ",l_csock:GetIP())
-			if c.SocksIPWhitelist[l_csock:GetIP()] then
-				l_csock:SetCallbackReceive(function(sock, packet)
-
-					local packet_str = packet:ReadStringAll()
-					--print(packet_str)
-					processUpdate(packet_str) --(packet:ReadStringAll())
-					--TLG.notifyGroup({TLG_AMD},packet_str)
-				end)
-			else
-				TLG.LogError("Этот хер пытался обратиться к сокету обновлений TLG с запрещенного ИП: " .. l_csock:GetIP())
-			end
-
-			l_csock:SetTimeout(1000)
-			l_csock:ReceiveUntil("\r\n\r")
-			l_ssock:Accept()
-		end)
-		ssock:Accept()
-	end
-end
-
--- Этот говнокод сделан для предотвращения ошибки открытия сокета
--- Бывало так, что если после закрытия сокета сразу же пытаться его открыть, то он не открывался
--- Спустя некоторое время я заметил, что ему просто нужно время
--- Эта хуйня ниже выполняет подряд 2 задачи при каждом рефреше файла
--- Если сокет существует, то оно его закрывает и через 2 сек открывает опять
--- Если не существует, то открывает сразу
-local funcs = {
-	function()
-		-- Избежание конфликта двойного открытия на 1 порту
-		if ssock then
-			ssock:Close()
-		end
-	end,
-	SetReceiver
-}
-tasks:Start(funcs,ssock and 2 or 0)
-
 
 
 

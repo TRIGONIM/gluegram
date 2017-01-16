@@ -1,28 +1,6 @@
 module("TG",package.seeall)
 
-local token = TLG.Cfg.Token
-
-
-
-function getUpdates(cb, offset, limit, tout)
-	offset = offset or ""
-	limit = limit or ""
-	tout = tout or ""
-
-	--print("https://api.telegram.org/bot" .. token .. "/getUpdates?offset=" .. offset .. "&limit=" .. limit .. "&timeout=" .. tout)
-
-	http.Fetch("https://api.telegram.org/bot" .. token .. "/getUpdates?offset=" .. offset .. "&limit=" .. limit .. "&timeout=" .. tout,
-		cb,cb
-	)
-end
-
-
-
-function getMe(cb)
-	http.Fetch("https://api.telegram.org/bot" .. token .. "/getMe",
-		cb,cb
-	)
-end
+local token = TLG.CFG.Token
 
 
 

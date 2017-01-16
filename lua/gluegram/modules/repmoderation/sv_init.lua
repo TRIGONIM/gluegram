@@ -1,5 +1,6 @@
+local B = TLG.NewBot("167720993:AAEzqbwu8Jpq9-L3tblzrPXR1t_ywYcx5Fw","main")
+	:SetListenPort(29000 + ServerID())
 
-local B = TLG("167720993:AAEzqbwu8Jpq9-L3tblzrPXR1t_ywYcx5Fw")
 
 local function nickSid(sid)
 	local pl = player.GetBySteamID(sid)
@@ -18,7 +19,8 @@ local msg = [[
 local ban = "rep;%s;ban;%s;%i"
 local rem = "rep;%s;rem;%s"
 
-hook("OnRepAdd","TLG",function(sFrom,pTo,iCategory,message,id)
+
+hook.Add("OnRepAdd","TLG",function(sFrom,pTo,iCategory,message,id)
 	local IKB = TLG.InlineKeyboard()
 	IKB:Line(
 		IKB:Button("Удалить"):SetCallBackData(rem:format(id,sFrom))
@@ -47,13 +49,14 @@ local function repRem(CBQ,id,author)
 			IKB:Button("Бан сутки + удал"):SetCallBackData( ban:format(id,author,1440) )
 		)
 
-		B:EditMessage(CBQ:Message(),"\n• Репу под ID " .. id .. " " .. (ok and "удалена" or "УЖЕ удалена") .. ". Мод: @" .. CBQ:From():Login(),true)
+		B:EditMessage(CBQ:Message(),"\n• Репа под ID " .. id .. " " .. (ok and "удалена" or "УЖЕ удалена") .. ". Мод: @" .. CBQ:From():Login(),true)
 			:SetReplyMarkup(IKB)
 			:EditText()
 	end)
 end
 
-hook("TLG.OnCallbackQuery","REP_Moderation",function(CBQ)
+
+B:CBQHook(function(CBQ)
 	-- rep:ban:h:STEAM_
 	if CBQ:Data():sub(1,3) ~= "rep" then return end
 

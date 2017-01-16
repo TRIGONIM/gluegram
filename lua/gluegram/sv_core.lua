@@ -31,8 +31,8 @@ end
 -- })
 
 setmetatable(TLG, {
-	__call = function(self,sToken)
-		return self.NewBot(sToken)
+	__call = function(self,...)
+		return self.NewBot(...)
 	end
 })
 
