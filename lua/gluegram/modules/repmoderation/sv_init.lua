@@ -1,6 +1,5 @@
-local B = TLG.NewBot("167720993:AAEzqbwu8Jpq9-L3tblzrPXR1t_ywYcx5Fw","main")
+local B = TLG("167720993:AAEzqbwu8Jpq9-L3tblzrPXR1t_ywYcx5Fw","main")
 	:SetListenPort(29000 + ServerID())
-
 
 local function nickSid(sid)
 	local pl = player.GetBySteamID(sid)
@@ -41,17 +40,32 @@ hook.Add("OnRepAdd","TLG",function(sFrom,pTo,iCategory,message,id)
 end)
 
 
-local function repRem(CBQ,id,author)
-	REP.RemAction(id,author,true,function(ok)
+local om_msg = "Администратор @%s отреагировал на событие изменения репутации и удалил ее.\n\nСообщение события:\n%s"
+
+local function repRem(CBQ,id,author_sid)
+	REP.RemAction(id,author_sid,true,function(ok)
+		local login = CBQ:From():Login()
+
 		local IKB = TLG.InlineKeyboard()
 		IKB:Line(
-			IKB:Button("Бан час + удал")  :SetCallBackData( ban:format(id,author,60) ),
-			IKB:Button("Бан сутки + удал"):SetCallBackData( ban:format(id,author,1440) )
+			IKB:Button("Бан час + удал")  :SetCallBackData( ban:format(id,author_sid,60) ),
+			IKB:Button("Бан сутки + удал"):SetCallBackData( ban:format(id,author_sid,1440) )
 		)
 
-		B:EditMessage(CBQ:Message(),"\n• Репа под ID " .. id .. " " .. (ok and "удалена" or "УЖЕ удалена") .. ". Мод: @" .. CBQ:From():Login(),true)
+		B:EditMessage(CBQ:Message(),"\n• Репа под ID " .. id .. " " .. (ok and "удалена" or "УЖЕ удалена") .. ". Мод: @" .. login,true)
 			:SetReplyMarkup(IKB)
 			:EditText()
+
+		if !ok then return end
+
+		OM(author_sid,om_msg:format(login, string.stripEmoji( CBQ:Message()["text"] )))
+			:SetTitle("Удаление репутации")
+			:SetName("Telegram @" .. login)
+			:SetGroup(OM_REP)
+			:SetLinks({
+				["Написать ему"] = "https://t.me/" .. login,
+			})
+		:Send(true)
 	end)
 end
 

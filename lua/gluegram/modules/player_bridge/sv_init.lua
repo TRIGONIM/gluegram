@@ -25,8 +25,6 @@ local function updateCache()
 			TLG.PLAYERACCOUNTS[ row["s64"] ] = row["tlg_chatid"]
 			TLG.PLAYERACCOUNTS[ row["tlg_chatid"] ] = row["s64"]
 		end
-
-		PrintTable(TLG.PLAYERACCOUNTS)
 	end)
 
 	linkUser(76561198071463189,TLG_AMD,"amd_nick")

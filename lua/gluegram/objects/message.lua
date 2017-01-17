@@ -2,16 +2,6 @@ local MSG = TLG.NewObjectBase("Message")
 
 --------------------------------------------------------------------
 
-function TLG.NewMessage(bot_token,receiver,text)
-	return setmetatable({
-		chat_id   = receiver,
-		text      = text,
-		bot_token = bot_token
-	}, MSG)
-end
-
---------------------------------------------------------------------
-
 -- !! int
 function MSG:ID()
 	return self.message_id
@@ -168,7 +158,7 @@ function MSG:Send(fCallback)
 			["text"]                     = self.text,
 			["parse_mode"]               = self.parse_mode,
 			["disable_web_page_preview"] = self.disable_web_page_preview,
-			["reply_to_message_id"]      = self.reply_to_message_id,
+			["reply_to_message_id"]      = tostring(self.reply_to_message_id),
 			["reply_markup"]             = self.reply_markup
 	},fCallback)
 end
