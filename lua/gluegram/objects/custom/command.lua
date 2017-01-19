@@ -58,13 +58,9 @@ end
 
 --------------------------------
 
+-- Функция может вернуть сообщение для быстрой отправки активатору команды
+-- А вторым аргументом парс мод, например, Markdown
+-- Пример обработки в bots/core/core_sv.lua
 function CMD:Call(MSG,tArgs)
-	local reply,parse_mode = self.func(MSG,tArgs)
-	if reply then
-		self["bot"]
-			:Message(MSG["chat"]["id"], "[" .. self["bot"]:Name() .. "]: " .. reply )
-				:ReplyTo( MSG:ID() )
-				:SetParseMode(parse_mode)
-				:Send()
-	end
+	return self.func(MSG,tArgs)
 end

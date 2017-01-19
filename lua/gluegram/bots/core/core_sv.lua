@@ -8,9 +8,29 @@ local BOT = TLG("167720993:AAEzqbwu8Jpq9-L3tblzrPXR1t_ywYcx5Fw",TLG.SERV)
 
 
 
-local function processCommand(CMD,MSG,tArgs)
-	CMD:Call(MSG,tArgs)
-	-- "testasdfjhk asdf asd" in tArgs
+local function processCommand(CMD,MSG,USER,tArgs)
+	if tArgs[1] == "-help" and !tArgs[2] then
+		BOT:Message(USER,CMD:Help() or "По этой команде нет дополнительной информации"):Send()
+		return
+	end
+
+	--                    "testasdfjhk asdf asd" in tArgs
+	local reply,parse_mode = CMD:Call(MSG,tArgs)
+	if reply then
+		BOT:Message(MSG["chat"]["id"], "[" .. BOT:Name() .. "]: " .. reply )
+			:ReplyTo( MSG:ID() )
+			:SetParseMode(parse_mode)
+			:Send()
+	end
+
+	-- Обновляем таймер автоотключения
+	timer.Create("TLG.AutoDisconnect_" .. USER:ID(),60 * 30,1,function()
+		-- Еще не отключился сам
+		if BOT:GetSession(USER) then
+			BOT:Auth(USER,false)
+			BOT:Message(USER,"Вы отключены от " .. BOT:Name()):Send()
+		end
+	end)
 end
 
 local function table_remove(tab,index)
@@ -28,7 +48,7 @@ end
 
 BOT:UpdatesHook(function(UPD)
 	-- EXAMPLE: /login@my_info_bot testasdfjhk asdf asd
-	if !UPD["message"]["text"] or UPD["message"]["text"][1] ~= "/" then return end -- если не команда
+	if !UPD["message"] or !UPD["message"]["text"] or UPD["message"]["text"][1] ~= "/" then return end -- если не команда
 
 	local MSG  = UPD:Message()
 	local USER = MSG:From()
@@ -46,21 +66,21 @@ BOT:UpdatesHook(function(UPD)
 		if CMD then
 
 			-- Игнорируем обработку, если нужен мастер сервер, а мы им не являемся
-			if CMD:ForMaster() and !TLG.CFG.isMasterServer then
+			if CMD:ForMaster() and !BOT:IsMaster() then
 				return
 			end
 
 			-- Нужна авторизация, а мы не авторизированы
-			if !CMD:IsPublic() and !BOT:IsUserAuthed(USER) then
+			if !CMD:IsPublic() and !BOT:GetSession(USER) then
 				BOT:Message(USER,"Вы не авторизированы. /login " .. BOT:Name()):Send()
 				return
 			end
 
 
-			processCommand(CMD,UPD:Message(), table_remove(pieces,1))
+			processCommand(CMD,MSG,USER, table_remove(pieces,1))
 
 		else
-			BOT:Message(USER,"Команды " .. cmd .. " не существует"):Send()
+			BOT:Message(USER,BOT:Name() .. " - команды " .. cmd .. " не существует"):Send()
 		end
 	end
 end,"core")
@@ -75,7 +95,7 @@ end,"core")
 
 -- login
 BOT:AddCommand("login",function(MSG,args)
-	if true then return "Бот пока выключен" end
+	if MSG:From():Login() ~= "amd_nick" then return "Бот пока выключен" end
 
 	if !args[1] and BOT:IsMaster() then
 		return "Нужно ввести кодовое название бота, к которому хотите подключиться. Пример: /login " .. BOT:Name()
@@ -126,7 +146,7 @@ BOT:AddCommand("help",function(MSG,args)
 		]])
 
 	for cmd,CMD in pairs( BOT:GetCommands() ) do
-		if CMD:IsPublic() or BOT:IsUserAuthed( MSG:From() ) then
+		if CMD:IsPublic() or BOT:GetSession( MSG:From() ) then
 			if CMD.aliases and CMD.aliases[cmd] then continue end -- алиас
 
 			inf = inf .. "*/" .. cmd .. "*" .. (CMD:IsPublic() and " Общая" or "") .. (CMD:ForMaster() and " Master" or "")
@@ -145,4 +165,4 @@ end)
 	:SetPublic(true)
 	:SetForMaster(true)
 	:SetHelp("/help command отобразит помощь по конкретной команде, ровно как и /command --help")
-	:SetDescription("Возвращает список доступных на данный момент команд и краткую информацию по ним. После авторизации список может измениться. Также отображает некоторую дополнительнуюю полезную информацию")
+	:SetDescription("Возвращает список доступных на данный момент команд и краткую информацию по ним. После авторизации список может измениться. Также отображает некоторую дополнительную полезную информацию")

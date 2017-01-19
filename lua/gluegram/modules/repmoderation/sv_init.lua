@@ -53,7 +53,7 @@ local function repRem(CBQ,id,author_sid)
 
 		B:EditMessage(CBQ:Message(),"\n• Репа под ID " .. id .. " " .. (ok and "удалена" or "УЖЕ удалена") .. ". Мод: @" .. login,true)
 			:SetReplyMarkup(IKB)
-			:EditText()
+			:Send()
 
 		if !ok then return end
 
@@ -84,11 +84,11 @@ B:CBQHook(function(CBQ)
 		-- Таймер, чтобы оверрайднуть только что измененное сообщение через repRem
 		timer.Simple(2,function()
 			B:EditMessage(CBQ:Message(),"\n• Автора репы под ID " .. rep_id .. " заблокировал @" .. CBQ:From():Login(),true)
-				:EditText()
+				:Send()
 		end)
 	end
 
 	-- if action == "rem" then
-	-- /\Сначала было задумано так, но потом передумал и сделал удаление в лююбом случае
+	-- /\Сначала было задумано так, но потом передумал и сделал удаление в любом случае
 	repRem(CBQ,rep_id,author_sid)
 end)

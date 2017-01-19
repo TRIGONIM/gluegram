@@ -1,105 +1,71 @@
-local function concatenateArgs(msgparts)
-	local argss = ""
-	for i = 2,#msgparts do
-		argss = argss .. msgparts[i] .. " "
+
+local BOT = TLG.BOTS[TLG.SERV]
+
+
+BOT:AddCommand("lyrics",function(MSG,args)
+	if !BOT:IsMaster() then return end
+
+	if !args[1] then
+		return "Нужно ввести аргументы. */lyrics -help* для большей инфы", "Markdown"
 	end
 
-	return argss ~= "" and argss -- вернет nil, усли аргументов нет
-end
+	-- Сначала склеиваем все аргументы, которых может быть 10 шт, а потом разделяем на исполнителя и трек
+	-- Это можно сделать через string.match, но я не умею.
+	-- Черт руку дернул попытаться. Пока подобрал регулярку, еще сильнее возненавидел их
+	local query = string.Implode(" ",args)
+	local artist,song = string.match(query,"([%w]+)%s*%-%s*([%w]+)")
 
+	-- Регулярка не сработала, значит чел указал запрос без дефиса и ищет только песню
+	if !artist then
+		song = query
+	end
 
-TLG.addCommand(
-	"lyrics",
-	function(chat,msgtbl,nick)
-		if !TLG.Cfg.isMasterServer then return end
+	local IKB = TLG.InlineKeyboard()
 
-		local args = concatenateArgs(msgtbl)
-
-		if !args then
-			TG.SendMessage(chat,"Необходимо ввести аргументы. Пример в /help")
+	-- выполнение всего внутри каллбэка - гарант того, что функция поиска сработала без ошибок
+	-- хорошо тем, что функция не врубит ожидание ид лирикса, если не отправит юзеру список песен
+	LYR.searchSong(artist,song,function(tracks)
+		if !tracks then
+			BOT:Message(MSG:Chat(), "Ничего не найдено. Повторите запрос"):Send()
 			return
 		end
 
-		local request_parts = string.Explode(" - ",args)
-		local artist,song   = request_parts[1],request_parts[2]
+		for id,track in pairs(tracks) do
+			local tr = track.track
 
-		dprint(artist,song)
+			local author  = tr.artist_name
+			local name    = tr.track_name
+			local trackid = tr.track_id
 
-		if !song then -- если указан лишь первый "аргумент" без дефиса. Например /lyrics money for nothing
-			song   = artist
-			artist = nil
+			IKB:Line(IKB:Button(("%s - %s"):format(author,name)):SetCallBackData("lyr;" .. trackid))
 		end
 
-		dprint(artist,song)
+		BOT:Message(MSG:Chat(), "Вот такая дичь короче тут:"):SetReplyMarkup(IKB):Send()
+	end) -- конец поиска песен
 
-		-- выполнение всего внутри каллбэка - гарант того, что функция поиска сработала без ошибок
-		-- хорошо тем, что функция не врубит ожидание ид лирикса, если не отправит юзеру список песен
-		LYR.searchSong(artist,song,function(tracks)
-			if !tracks then
-				TG.SendMessage(chat,"Ничего не найдено. Повторите запрос")
-				return
-			end
 
-			local txt = ""
-
-			for id,track in pairs(tracks) do
-				local tr = track.track
-
-				local album   = tr.album_name
-				local image   = tr.album_coverart_100x100
-				local author  = tr.artist_name
-				local name    = tr.track_name
-				local link    = tr.track_share_url
-
-				local trackid = tr.track_id
-				local lyrics  = tr.lyrics_id
-
-				txt = txt .. string.format(
-					"[%s] %s\nAlbum: %s\nImage: %s\nLink: %s\n/%s\n\n",
-					author,name,
-					album,
-					image,
-					link,
-					trackid
-				)
-			end
-
-			TG.SendMessage(TLG_AMD,txt)
+	return "Ищем песенку"
+end)
+	:SetPublic(true)
+	:AddAlias("song")
+	:SetHelp("/lyrics muse - drones. Можно указывать исполнителя и название через дефис или только название")
+	:SetDescription("Позволяет по фасту получить текст песни")
 
 
 
 
-			TLG.TMP["holding_lyrics"]       = TLG.TMP["holding_lyrics"] or {}
-			TLG.TMP["holding_lyrics"][nick] = true
+BOT:CBQHook(function(CBQ)
+	-- Надо придумать способ получше для обработки кнопочек
+	if string.sub(CBQ:Data(),1,4) ~= "lyr;" then return end
 
-			hook.Add("onNewGluegramMessage","TLG.LyricsHolding",function(message)
-				local text        = message["message"]["text"]
-				local sender_nick = message["message"]["from"]["username"]
+	LYR.getLyrics(function(lyrics)
+		local lyrtext = lyrics and lyrics["lyrics_body"] ~= "" and lyrics["lyrics_body"]
 
-				local cmd = string.sub(string.Explode(" ",text)[1],2) -- эксплодом вырываем первое слово, чтобы не впустили "cmd stats" например
-				if TLG.CMDS[cmd] then return end -- мы ждем сообщение вида /12345678, поэтому не обрабатываем ввод обычных команд
+		if !lyrtext then
+			BOT:Message(CBQ["message"]["chat"],"Увы, нет текста к этой песенке. Попробуйте другой код"):Send()
+			return
+		end
 
-				if sender_nick ~= nick then return end -- если пишет в чат не активатор команды
-
-				LYR.getLyrics(function(lyrics)
-					local lyrtext = lyrics and lyrics["lyrics_body"] ~= "" and lyrics["lyrics_body"]
-
-					if !lyrtext then
-						TG.SendMessage(chat,"Увы, нет текста к этой песенке. Попробуйте другой код")
-						return
-					end
-
-					print(chat,lyrtext)
-
-					TG.SendMessage(chat,lyrtext)
-					hook.Remove("onNewGluegramMessage","TLG.LyricsHolding")
-				end,string.sub(text,2)) -- срезаем слэш в начале
-			end)
-			TG.SendMessage(chat, "Вот все, что найдено. Для поиска текста песни введите через слэш ее идентификатор (Написан после каждой песни) или повторите ваш запрос той же коммандой, чтобы искать другой результат. Пример: /12345678")
-
-		end) -- конец поиска песен
-
-	end,
-	"Позволяет по фасту получить текст песни. Использование: /lyrics taylor swift - blabla bla. Можно указывать исполнителя и название через дефис или только название. Начало разработки - утро 08.07.16, когда у меня отключили интернет ._.",
-	true
-)
+		BOT:Message(CBQ["message"]["chat"],lyrtext):Send()
+	end,string.sub(CBQ:Data(),5)) -- срезаем lyr; в начале
+end,"lyrics")

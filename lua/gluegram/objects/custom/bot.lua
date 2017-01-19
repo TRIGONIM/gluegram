@@ -31,6 +31,19 @@ function TLG.GetBot(sName)
 	return TLG.BOTS[sName]
 end
 
+-- Нихера не работает. Сокет вроде закрывается, но он нихера не закрывается
+-- Поэтому заново бота создать не выйдет, ибо сокет не откроется
+function TLG.RemoveBot(sName)
+	if TLG.BOTS[sName] then
+		if TLG.BOTS[sName].sock then
+			print("Закрытие сокета")
+			TLG.BOTS[sName].sock:Close()
+		end
+
+		TLG.BOTS[sName] = nil
+	end
+end
+
 -------------------------------------------
 
 function BOT:Name()
@@ -145,7 +158,6 @@ function BOT:CBQHook(fCallback,hookName)
 
 	self.cbq_cb[hookName] = fCallback
 
-
 	hook.Add("TLG.OnBotCallbackQuery_" .. self.name,tostring(hookName),fCallback)
 
 	return self
@@ -153,26 +165,25 @@ end
 
 -- Создаем объект сообщения
 function BOT:Message(iTo,sText)
-	if istable(iTo) then -- USER object
+	if istable(iTo) then -- USER or CHAT object
 		iTo = iTo["id"]
 	end
 
-	return TLG.SetMeta({
-		chat_id   = iTo,
-		text      = sText,
-		bot_token = self:GetToken()
-	},"Message")
+	return TLG.Request("sendMessage",self:GetToken())
+		:BindParams(iTo,sText)
 end
 
 -- Принимает объект сообщения полученной с сервера "Update" таблицы
 -- По желанию, можно указать "text", иначе он не изменится
 -- "sText" указывать ОБЯЗАТЕЛЬНО, если указан "bAppend"
-function BOT:EditMessage(msgObj,sText,bAppend)
-	return self:Message(
-		msgObj["chat"]["id"],
-		bAppend and (msgObj["text"] .. sText) or
-		sText or msgObj["text"]
-	):SetEditMessageID(msgObj["message_id"])
+function BOT:EditMessage(MSG,sText,bAppend)
+	-- print("BOT:EditMessage(MSG,sText,bAppend)",MSG,sText,bAppend)
+	-- PrintTable(MSG)
+
+	return TLG.Request("editMessageText",self:GetToken())
+		:BindParams(bAppend and (MSG["text"] .. sText) or sText or MSG["text"])
+		:SetEditMessageID(MSG["message_id"])
+		:SetChatID(MSG["chat"]["id"])
 end
 
 
@@ -180,11 +191,11 @@ end
 -- Командный процессор
 -------------------------------------------
 function BOT:Auth(USER,bAuth)
-	self.sessions[USER:ID()] = bAuth == true or nil -- не даем записать false. Лишняя память)
+	self.sessions[USER:ID()] = bAuth and USER or nil -- не даем записать false. Лишняя память)
 end
 
 -- Проверяется, если "not CMD:IsPublic()"
-function BOT:IsUserAuthed(USER)
+function BOT:GetSession(USER)
 	return self.sessions[USER:ID()]
 end
 

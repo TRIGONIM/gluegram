@@ -2,7 +2,7 @@ local BOT = TLG.BOTS[TLG.SERV]
 
 -- bots
 BOT:AddCommand("bots",function(MSG)
-	return (BOT:IsUserAuthed(MSG:From()) and "✅" or "❌") .. " Я " .. BOT:Name() .. (BOT:IsMaster() and " (MASTER)" or "")
+	return (BOT:GetSession(MSG:From()) and "✅" or "❌") .. " Я " .. BOT:Name() .. (BOT:IsMaster() and " (MASTER)" or "")
 end)
 	:SetPublic(true)
 	:AddAlias("servers"):AddAlias("ping")

@@ -22,13 +22,6 @@ end
 
 
 
--- -- TODO УБРАТЬ
--- TLG = TLG or {}
--- TLG["CFG"] = setmetatable({}, {
--- 	__call = function(self)
--- 		return self
--- 	end
--- })
 
 setmetatable(TLG, {
 	__call = function(self,...)
@@ -51,30 +44,4 @@ function TLG.LogError(err)
 
 	print("\n\n\n" .. sErr)
 	file.Append("telegram_errors.txt",sErr)
-end
-
-function TLG.ProcessRequest(sToken,sMethod,tParams,fCallback)
-	http.Post(
-		"https://api.telegram.org/bot" .. sToken .. "/" .. sMethod,
-		tParams,function(dat)
-			dat = util.JSONToTable(dat)
-
-			if !dat.ok then
-				TLG.LogError({
-					dat.error_code,
-					dat.description,
-					debug.traceback(),
-				})
-
-				return
-			end
-
-			-- for custom modules
-			--hook.Run("TLG.OnProcessRequestFinish",dat)
-
-			if fCallback then
-				fCallback(dat)
-			end
-		end
-	)
 end
