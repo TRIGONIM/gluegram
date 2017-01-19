@@ -18,10 +18,9 @@ includeSV(fol .. "/objects/custom/command.lua")
 includeSV(fol .. "/sv_methods.lua")
 includeSV(fol .. "/sv_core.lua")
 includeSV(fol .. "/sv_processor.lua")
-includeSV(fol .. "/sv_commands.lua")
 includeSV(fol .. "/sv_groups.lua")
 
-LoadModules(fol .. "/modules","TELEGRAM BOT")
 LoadModules(fol .. "/bots")
+LoadModules(fol .. "/modules","TELEGRAM BOT")
 
 hook.Call("onGluegramLoaded")

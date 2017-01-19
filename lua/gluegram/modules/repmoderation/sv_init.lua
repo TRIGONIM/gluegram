@@ -1,5 +1,4 @@
-local B = TLG("167720993:AAEzqbwu8Jpq9-L3tblzrPXR1t_ywYcx5Fw","main")
-	:SetListenPort(29000 + ServerID())
+local B = TLG.BOTS[TLG.SERV]
 
 local function nickSid(sid)
 	local pl = player.GetBySteamID(sid)

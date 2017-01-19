@@ -46,14 +46,25 @@ function CMD:SetForMaster(bForMasterServer)
 	return self
 end
 
+-- Добавляет альтернативу использования команды
+function CMD:AddAlias(name)
+	self["bot"]["commands"][name] = self
+
+	self.aliases = self.aliases or {}
+	self.aliases[name] = true
+
+	return self
+end
+
 --------------------------------
 
 function CMD:Call(MSG,tArgs)
-	local reply = self.func(MSG,tArgs)
+	local reply,parse_mode = self.func(MSG,tArgs)
 	if reply then
 		self["bot"]
 			:Message(MSG["chat"]["id"], "[" .. self["bot"]:Name() .. "]: " .. reply )
 				:ReplyTo( MSG:ID() )
+				:SetParseMode(parse_mode)
 				:Send()
 	end
 end

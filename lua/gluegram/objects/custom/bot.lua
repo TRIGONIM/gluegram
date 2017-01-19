@@ -205,6 +205,14 @@ function BOT:AddCommand(sCmd,fCallback)
 	return obj
 end
 
+function BOT:GetCommand(sCmd)
+	return self.commands[sCmd]
+end
+
+function BOT:GetCommands()
+	return self.commands
+end
+
 -- Может быть несколько гмод серверов с одинаковыми виртуальными ботами, но все они будут подключены к 1 боту телеграма
 -- Если все боты будут считаться "Мастерами" (главными), то многие сообщения, типа "Нужно ввести название сервера" при вводе /login без аргументов
 -- будут отправляться всеми ботами в один чат, тем самым захламляя его. Это не очень приятно, правда?
@@ -217,4 +225,10 @@ end
 
 function BOT:IsMaster()
 	return self.master
+end
+
+-- Функция будет выполняться после /login botname
+function BOT:SetMotd(fMotd)
+	self.motd = fMotd
+	return self
 end
