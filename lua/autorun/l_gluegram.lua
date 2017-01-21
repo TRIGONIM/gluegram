@@ -1,26 +1,32 @@
 TLG = TLG or {}
 
-local fol = "gluegram"
-
-includeSV(fol .. "/dependencies/sv.lua")
-
-includeSV(fol .. "/config.lua")
-
-for _,f in pairs(file.Find(fol .. "/objects/*","LUA")) do
-	includeSV(fol .. "/objects/" .. f)
-end
-includeSV(fol .. "/objects/custom/bot.lua")
-includeSV(fol .. "/objects/custom/command.lua")
-
-includeSV(fol .. "/sv_methods.lua")
-includeSV(fol .. "/sv_core.lua")
-includeSV(fol .. "/sv_groups.lua")
-
-for _,f in pairs(file.Find(fol .. "/methods/*","LUA")) do
-	includeSV(fol .. "/methods/" .. f)
+local function include(path)
+	includeSV("gluegram/" .. path)
 end
 
-LoadModules(fol .. "/bots")
-LoadModules(fol .. "/modules","TELEGRAM BOT")
+local function addFolder(path)
+	for _,f in pairs(file.Find("gluegram/" .. path .. "/*","LUA")) do
+		include(path .. "/" .. f)
+	end
+end
+
+
+
+include("dependencies/sv.lua")
+include("config.lua")
+
+addFolder("objects")
+include("objects/custom/listener.lua")
+include("objects/custom/command.lua")
+include("objects/custom/bot.lua")
+
+include("sv_methods.lua")
+include("gluegram_core.lua")
+
+addFolder("methods")
+addFolder("listeners")
+
+LoadModules("gluegram/bots")
+LoadModules("gluegram/modules","TELEGRAM BOT")
 
 hook.Call("onGluegramLoaded")

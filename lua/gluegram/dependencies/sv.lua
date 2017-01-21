@@ -6,3 +6,7 @@ end
 
 table.ConcatKeys = table.ConcatKeys
 NM = NM
+
+-- ServerID()
+-- includeSV()
+-- Написать string.StartsWith(), проверить производительность с sub и ipairs и добавить сюда

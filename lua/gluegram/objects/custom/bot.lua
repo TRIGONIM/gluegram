@@ -6,44 +6,6 @@ BOT.__call = function(self,...) return self:AddCommand(...) end
 require("bromsock")
 
 
-
-TLG.BOTS = TLG.BOTS or {}
-
-function TLG.NewBot(sToken,sName)
-	print(1,sToken,sName)
-	if TLG.BOTS[sName] then return TLG.BOTS[sName] end
-	print(2,sToken,sName)
-
-	local bot_obj = setmetatable({
-		commands = {},
-		sessions = {}, -- авторизированные пользователи
-
-		token = sToken,
-		name  = sName,
-	}, BOT)
-
-	TLG.BOTS[sName] = bot_obj
-
-	return bot_obj
-end
-
-function TLG.GetBot(sName)
-	return TLG.BOTS[sName]
-end
-
--- Нихера не работает. Сокет вроде закрывается, но он нихера не закрывается
--- Поэтому заново бота создать не выйдет, ибо сокет не откроется
-function TLG.RemoveBot(sName)
-	if TLG.BOTS[sName] then
-		if TLG.BOTS[sName].sock then
-			print("Закрытие сокета")
-			TLG.BOTS[sName].sock:Close()
-		end
-
-		TLG.BOTS[sName] = nil
-	end
-end
-
 -------------------------------------------
 
 function BOT:Name()
@@ -54,79 +16,14 @@ function BOT:GetToken()
 	return self.token
 end
 
-function BOT:GetCommands()
-	return self.commands
-end
-
 -------------------------------------------
 
-local function openSock(self,callback,try)
-	self.sock = BromSock(BROMSOCK_TCP)
-
-	if !self.sock:Listen(self.port) then
-		MsgC(Color(200,50,50),"TLG Socket not opened\n")
-
-		if try and try > 5 then
-			TLG.notifyGroup("root","Сокет телеграмма не открылся.\nПроверьте не занят ли " .. self.port .. " порт")
-			return
-		end
-
-		TLG.LogError(("Сокет для телеграмма не открылся и не готов принимать сообщения.\nПорт: %s\nПовторяем попытку (%s/5)"):format(self.port,try or 1))
-
-		self.sock:Close()
-
-		timer.Simple(try and (2 * try) or 0,function()
-			openSock(self,callback,try and try + 1 or 1)
-		end)
-	else
-		MsgC(Color(50,200,50),"TLG Socket successfuly set\n")
-
-		self.sock:SetCallbackAccept(function(l_ssock, l_csock)
-			if TLG.CFG.SocksIPWhitelist[l_csock:GetIP()] then
-				l_csock:SetCallbackReceive(function(_, packet)
-					callback(packet:ReadStringAll())
-				end)
-			else
-				TLG.LogError("Этот хер пытался обратиться к сокету обновлений TLG с запрещенного ИП: " .. l_csock:GetIP())
-			end
-
-			l_csock:SetTimeout(1000)
-			l_csock:ReceiveUntil("\r\n\r")
-			l_ssock:Accept()
-		end)
-		self.sock:Accept()
-	end
-end
-
-function BOT:SetListenPort(iListenPort)
-	self.port = iListenPort
-
-	print("SetListenPort",iListenPort,self.port)
-	print("self.sock:GetPort()",self.sock and self.sock:GetPort() or "NO SOCK")
-	print("self.sock:GetIP()",self.sock and self.sock:GetIP() or "NO SOCK")
-
-	if self.sock and self.sock:GetPort() == self.port then
-		--self.sock:Close()
-		return self
-	end
-
-	-- Без зедаржки есть риск, что сокет не откроется
-	timer.Simple(self.sock and 5 or 0,function()
-		openSock(self,function(msg)
-			local tbl = util.JSONToTable(msg)
-			if tbl then -- не мусор пришел
-				local UPD = TLG.SetMeta(tbl,"Update")
-				hook.Call("TLG.OnBotUpdate_" .. self.name, nil, UPD)
-
-				if UPD["callback_query"] then
-					hook.Call("TLG.OnBotCallbackQuery_" .. self.name, nil, UPD:CallbackQuery())
-				end
-			end
-		end)
-	end)
-
+-- В fCallback будут передаваться новые UPDATE объекты
+function BOT:SetListener(sName,fCallback)
+	TLG.GetListener(sName):AddReceiver(self.name,fCallback)
 	return self
 end
+
 
 -------------------------------------------
 

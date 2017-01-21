@@ -1,9 +1,17 @@
 local BOT = TLG("167720993:AAEzqbwu8Jpq9-L3tblzrPXR1t_ywYcx5Fw",TLG.SERV)
-	:SetListenPort(29000 + ServerID())
 	:SetMaster(TLG.SERV == "kosson")
 	:SetMotd(function()
-		return "🕗 Аптайм сервера: " .. string.NiceTime(CurTime())
+		return "🕗 Аптайм сервера: " .. string.NiceTime(CurTime()) .. ". ID: " .. ServerID()
 	end)
+
+
+BOT:SetListener("socket",function(UPD)
+	hook.Run("TLG.OnBotUpdate_" .. BOT:Name(), UPD)
+
+	if UPD["callback_query"] then
+		hook.Run("TLG.OnBotCallbackQuery_" .. BOT:Name(), UPD:CallbackQuery())
+	end
+end)
 
 
 
@@ -117,7 +125,7 @@ end)
 BOT:AddCommand("exit",function(MSG,args)
 	if !args[1] or args[1] == BOT:Name() or string.find(BOT:Name(),args[1]) then
 		BOT:Auth(MSG:From(),false)
-		return "Отключились от " .. BOT:Name()
+		return "отключились. Бай-бай"
 	end
 end)
 	:SetPublic(true)
