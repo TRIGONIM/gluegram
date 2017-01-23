@@ -17,6 +17,16 @@ end
 function CMD:ForMaster()
 	return self.master
 end
+
+function CMD:CheckPassword(value)
+	if !self.password then return true end
+
+	if self.password.cryp then
+		value = self.password.cryp(value)
+	end
+
+	return self.password.pass == value
+end
 --------------------------------
 -- Будет отображаться в /cmd -- help или просто /help
 function CMD:SetDescription(sDesc)
@@ -54,6 +64,26 @@ function CMD:AddAlias(name)
 	self.aliases[name] = true
 
 	return self
+end
+
+-- При попытке вызова команды вылезет нумпад
+-- на котором надо будет ввести цифры iPass
+-- После этого 30 мин чел сможет юзать комманду
+-- Если вы не хотите, чтобы пароль был в открытом виде в коде,
+-- то вместо iPass можно указать хэш и указать функцию хэширования
+-- при вводе пароля он будет зашифрован через cryptFunc и сравнен с хэшем в iPass
+function CMD:SetPassword(iPass,cryptFunc) -- ТОЛЬКО ЦИФРЫ
+	self.password = {
+		pass = iPass,
+		cryp = cryptFunc
+	}
+
+	return self
+end
+
+-- Отправляет кейпад юзеру
+function CMD:RequestPassword(USER)
+
 end
 
 --------------------------------

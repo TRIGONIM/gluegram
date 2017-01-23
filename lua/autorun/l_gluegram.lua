@@ -1,3 +1,4 @@
+-- Рефрешить МОЖНО
 TLG = TLG or {}
 
 local function include(path)
@@ -11,12 +12,10 @@ local function addFolder(path)
 end
 
 
-
 include("dependencies/sv.lua")
 include("config.lua")
 
 addFolder("objects")
-include("objects/custom/listener.lua")
 include("objects/custom/command.lua")
 include("objects/custom/bot.lua")
 

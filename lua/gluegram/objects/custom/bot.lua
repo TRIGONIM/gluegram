@@ -19,8 +19,8 @@ end
 -------------------------------------------
 
 -- В fCallback будут передаваться новые UPDATE объекты
-function BOT:SetListener(sName,fCallback)
-	TLG.GetListener(sName):AddReceiver(self.name,fCallback)
+function BOT:SetListener(sName,fCallback,...)
+	TLG.GetListener(sName)(fCallback,...)
 	return self
 end
 

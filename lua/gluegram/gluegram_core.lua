@@ -4,7 +4,6 @@
 	• Замена TLG.notifyGroup везде
 	• TG.SendMessage тоже
 	• Модуль управления конфой персонала
-	• Нормальная регистрация и работа листенеров с несколькими ботами
 	• То же самое касается хэндлеров команд и нажатий кнопок, к примеру
 ---------------------------------------------------------------------------]]
 
@@ -46,7 +45,7 @@ end
 	BOTS
 ---------------------------------------------------------------------------]]
 function TLG.NewBot(sToken,sName)
-	if TLG.BOTS[sName] then return TLG.BOTS[sName] end
+	if TLG.BOTS[sName] then return TLG.BOTS[sName] end -- закомментить, если надо изменить метафункцию
 
 	local bot_obj = setmetatable({
 		commands = {},
@@ -68,25 +67,10 @@ end
 
 
 --[[-------------------------------------------------------------------------
-	LISTENERS object/custom/listener.lua
-
-	Если нужно несколько ботов, придется делать несколько похожих слушателей
-	Я пока наговнокодил и вышло так, как вышло.
-
-	Например, 2 бота на разных сокетах.
-	Придется регать 1 и тот же слушатель, но с разными именами и портами
-	Как-нить потом поправлю
+	LISTENERS. No OOP
 ---------------------------------------------------------------------------]]
 function TLG.AddListener(sName,fHandler)
-	local obj = setmetatable({
-		receivers = {},
-		handler = fHandler,
-		active = false,
-	},TLG.GetMeta("LISTENER"))
-
-	TLG.LISTENERS[sName] = obj
-
-	return obj
+	TLG.LISTENERS[sName] = fHandler
 end
 
 function TLG.GetListener(sName)

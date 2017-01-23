@@ -11,7 +11,8 @@ BOT:SetListener("socket",function(UPD)
 	if UPD["callback_query"] then
 		hook.Run("TLG.OnBotCallbackQuery_" .. BOT:Name(), UPD:CallbackQuery())
 	end
-end)
+
+end,29000 + ServerID())
 
 
 
@@ -84,6 +85,7 @@ BOT:UpdatesHook(function(UPD)
 				return
 			end
 
+			--if !CMD:CheckPassword(value)
 
 			processCommand(CMD,MSG,USER, table_remove(pieces,1))
 
@@ -102,7 +104,7 @@ end,"core")
 ---------------------------------------------------------------------------]]
 
 -- login
-BOT:AddCommand("login",function(MSG,args)
+BOT("login",function(MSG,args)
 	if MSG:From():Login() ~= "amd_nick" then return "Бот пока выключен" end
 
 	if !args[1] and BOT:IsMaster() then
@@ -118,11 +120,14 @@ end)
 	:SetPublic(true)
 	:SetHelp("Параметром принимает точное название бота или же его часть. Поддерживает \"*\"")
 	:SetDescription("Авторизация в указанном в аргументах боте. Список доступных ботов: /bots")
+	:SetPassword("cc357fe8623124095c0c2622c2c46fc4",function(val)
+		return hash.MD5(hash.SHA256(val)) -- гы
+	end)
 
 
 
 -- exit
-BOT:AddCommand("exit",function(MSG,args)
+BOT("exit",function(MSG,args)
 	if !args[1] or args[1] == BOT:Name() or string.find(BOT:Name(),args[1]) then
 		BOT:Auth(MSG:From(),false)
 		return "отключились. Бай-бай"
@@ -134,7 +139,7 @@ end)
 
 
 -- help
-BOT:AddCommand("help",function(MSG,args)
+BOT("help",function(MSG,args)
 	if BOT:GetCommand(args[1]) then
 		return BOT:GetCommand(args[1]):Help()
 	end

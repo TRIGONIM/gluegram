@@ -1,4 +1,4 @@
-local BOT = TLG.BOTS[TLG.SERV]
+local BOT = TLG.GetBot(TLG.SERV)
 
 -- bots
 BOT:AddCommand("bots",function(MSG)

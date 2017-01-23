@@ -18,19 +18,45 @@ local whitelist = {
 	["194.67.215.50"]   = true, -- ihor vds
 }
 
-TLG.AddListener("socket",function(self)
-	local port = 29000 + ServerID()
 
+
+-- не спрашивайте..
+local fCallback
+
+local function getCallback()
+	return fCallback
+end
+
+
+local function setCallback(func)
+	fCallback = func
+end
+
+
+-- Сокеты - это такая ебучая хуйня, которую лишний раз трогать страшно
+-- Лучше обновить функцию каллбэка при рефреше скрипта, чем закрывать сокет и оверрайдить его каллбэк с переоткрытием
+-- просто оверрайднуть каллбэк нельзя. Надо извращаться вот так вот
+
+-- UPD чет он так нихуя не обновляется
+-- Наверное, нужно какую-то глобальную блять функцию ему ебнуть
+-- Типа SetCallback и GetCallback, а то тут присосалось и все
+TLG.AddListener("socket",function(callback,port)
 	TLG.SOCKETS = TLG.SOCKETS or {}
-	TLG.SOCKETS[port] = TLG.SOCKETS[port] or BromSock(BROMSOCK_TCP)
+
+	setCallback(callback)
+
+	if TLG.SOCKETS[port] then
+		MsgC(Color(50,50,200),"TLG Socket callback has updated\n")
+		return
+	end
+
+	TLG.SOCKETS[port] = BromSock(BROMSOCK_TCP)
 
 	local sock = TLG.SOCKETS[port]
-
 	if !sock:Listen(port) then
 		MsgC(Color(200,50,50),"TLG Socket not opened\n")
 
 		local msg = "Сокет телеграмма не открылся и не готов принимать сообщения.\nПроверьте не занят ли " .. port .. " порт"
-
 		TLG.notifyGroup("root",msg)
 		TLG.LogError(msg)
 
@@ -44,7 +70,7 @@ TLG.AddListener("socket",function(self)
 					local tbl = util.JSONToTable( packet:ReadStringAll() )
 					if !tbl then return end -- не мусор пришел
 
-					self:Callback( TLG.SetMeta(tbl,"Update") )
+					getCallback()( TLG.SetMeta(tbl,"Update") )
 				end)
 			else
 				TLG.LogError("Этот хер пытался обратиться к сокету обновлений TLG с запрещенного ИП: " .. l_csock:GetIP())
@@ -54,6 +80,16 @@ TLG.AddListener("socket",function(self)
 			l_csock:ReceiveUntil("\r\n\r")
 			l_ssock:Accept()
 		end)
+
 		sock:Accept()
 	end
 end)
+
+
+-- При ресете глуграмма закрываем сокеты, а то не откроются опять
+-- hook.Add("onGluegramLoaded","CloseSockets",function()
+-- 	for port,sock in pairs(TLG.SOCKETS or {}) do
+-- 		MsgC(Color(50,250,50),"TLG Socket on port " .. port .. " has been closed")
+-- 		sock:Close()
+-- 	end
+-- end)
