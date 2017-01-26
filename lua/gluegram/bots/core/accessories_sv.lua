@@ -1,23 +1,28 @@
 
 
--- Отправляет сообщение группе людей
--- Принимает строку с названией группы или таблицу с идшниками
--- Вторым параметром принимает сообщение. Если не передать message, то передаст трэйсбэк
+local BOT = TLG.GetBot(TLG.SERV)
+
+-- TODO перенести в TADMIN, когда будет возможность создать
+-- нормального отдельного модульного бота без зависимостей
+function ta.TLGMSG(chat_id,msg)
+	BOT:Message(chat_id,"[" .. TLG.SERV .. "] " .. msg):Send()
+end
+
+
+-- обратная совместимость
+-- todo убрать
 function TLG.notifyGroup(groupname_or_ids,message)
-	message = "[" .. TLG.Cfg.SVName .. "] > " .. (message or debug.traceback())
+	message = message or debug.traceback()
 
 	-- Если список айдишников в таблице
 	if istable(groupname_or_ids) then
 		for i = 1,#groupname_or_ids do
-			TG.SendMessage(groupname_or_ids[i],message)
+			ta.TLGMSG(groupname_or_ids[i],message)
 		end
 
 	-- Если строка-название группы
 	else
-		for id,dat in pairs(TLG.Cfg.Users) do
-			if dat.group == groupname_or_ids then
-				TG.SendMessage(id,message)
-			end
-		end
+		-- Там только root бывает
+		ta.TLGMSG(TLF_CONF_REPORTS,message)
 	end
 end

@@ -1,4 +1,4 @@
-local B = TLG.BOTS[TLG.SERV]
+local BOT = TLG.GetBot(TLG.SERV)
 
 local function nickSid(sid)
 	local pl = player.GetBySteamID(sid)
@@ -28,7 +28,7 @@ hook.Add("OnRepAdd","TLG",function(sFrom,pTo,iCategory,message,id)
 		IKB:Button("Бан сутки + удал"):SetCallBackData(ban:format(id,sFrom,1440))
 	)
 
-	B:Message(TLG_CONF_MOD, msg:format(
+	BOT:Message(TLG_CONF_MOD, msg:format(
 		nickSid(sFrom),
 		nickSid(pTo:SteamID()),
 		REP.getCatNameByID(iCategory),
@@ -51,7 +51,7 @@ local function repRem(CBQ,id,author_sid)
 			IKB:Button("Бан сутки + удал"):SetCallBackData( ban:format(id,author_sid,1440) )
 		)
 
-		B:EditMessage(CBQ:Message(),"\n• Репа под ID " .. id .. " " .. (ok and "удалена" or "УЖЕ удалена") .. ". Мод: @" .. login,true)
+		BOT:EditMessage(CBQ:Message(),"\n• Репа под ID " .. id .. " " .. (ok and "удалена" or "УЖЕ удалена") .. ". Мод: @" .. login,true)
 			:SetReplyMarkup(IKB)
 			:Send()
 
@@ -69,7 +69,7 @@ local function repRem(CBQ,id,author_sid)
 end
 
 
-B:CBQHook(function(CBQ)
+BOT:CBQHook(function(CBQ)
 	-- rep:ban:h:STEAM_
 	if CBQ:Data():sub(1,3) ~= "rep" then return end
 
@@ -83,7 +83,7 @@ B:CBQHook(function(CBQ)
 
 		-- Таймер, чтобы оверрайднуть только что измененное сообщение через repRem
 		timer.Simple(2,function()
-			B:EditMessage(CBQ:Message(),"\n• Автора репы под ID " .. rep_id .. " заблокировал @" .. CBQ:From():Login(),true)
+			BOT:EditMessage(CBQ:Message(),"\n• Автора репы под ID " .. rep_id .. " заблокировал @" .. CBQ:From():Login(),true)
 				:Send()
 		end)
 	end
@@ -91,4 +91,4 @@ B:CBQHook(function(CBQ)
 	-- if action == "rem" then
 	-- /\Сначала было задумано так, но потом передумал и сделал удаление в любом случае
 	repRem(CBQ,rep_id,author_sid)
-end)
+end,"repmod")
