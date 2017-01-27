@@ -40,6 +40,13 @@ function TLG.LogError(err)
 end
 
 
+local GREEN = Color(50,200,50)
+local WHITE = Color(245,245,245)
+local GRAY  = Color(200,200,200)
+function TLG.Print(msg)
+	MsgC(GREEN,"[",WHITE,"TLG",GREEN,"] ", GRAY,msg .. "\n")
+end
+
 
 --[[-------------------------------------------------------------------------
 	BOTS

@@ -1,16 +1,18 @@
 -- Рефрешить МОЖНО
 TLG = TLG or {}
 
-local function include(path)
+function TLG.Include(path)
 	includeSV("gluegram/" .. path)
 end
 
-local function addFolder(path)
+function TLG.LoadFolder(path)
 	for _,f in pairs(file.Find("gluegram/" .. path .. "/*","LUA")) do
-		include(path .. "/" .. f)
+		TLG.Include(path .. "/" .. f)
 	end
 end
 
+local include   = TLG.Include
+local addFolder = TLG.LoadFolder
 
 include("dependencies/sv.lua")
 include("config.lua")
@@ -26,6 +28,5 @@ addFolder("methods")
 addFolder("listeners")
 
 LoadModules("gluegram/bots")
-LoadModules("gluegram/modules","TELEGRAM BOT")
 
 hook.Call("onGluegramLoaded")

@@ -8,29 +8,12 @@
 Кроме того прокси ретранслирует один входящий запрос на все адреса,
 которые указаны в базе данных, что позволяет работать одному боту сразу на нескольких адресах
 ---------------------------------------------------------------------------]]
-
-
 local whitelist = {
 	["localhost"]       = true,
 	["127.0.0.1"]       = true,
-	["89.108.104.58"]   = true, -- renter dedic
 	["193.124.185.164"] = true, -- ihor dedic
 	["194.67.215.50"]   = true, -- ihor vds
 }
-
-
-
--- не спрашивайте..
-local fCallback
-
-local function getCallback()
-	return fCallback
-end
-
-
-local function setCallback(func)
-	fCallback = func
-end
 
 
 -- Сокеты - это такая ебучая хуйня, которую лишний раз трогать страшно
@@ -43,12 +26,11 @@ end
 TLG.AddListener("socket",function(callback,port)
 	TLG.SOCKETS = TLG.SOCKETS or {}
 
-	setCallback(callback)
-
 	if TLG.SOCKETS[port] then
-		MsgC(Color(50,50,200),"TLG Socket callback has updated\n")
 		return
 	end
+
+	require("bromsock")
 
 	TLG.SOCKETS[port] = BromSock(BROMSOCK_TCP)
 
@@ -70,7 +52,7 @@ TLG.AddListener("socket",function(callback,port)
 					local tbl = util.JSONToTable( packet:ReadStringAll() )
 					if !tbl then return end -- не мусор пришел
 
-					getCallback()( TLG.SetMeta(tbl,"Update") )
+					callback( TLG.SetMeta(tbl,"Update") )
 				end)
 			else
 				TLG.LogError("Этот хер пытался обратиться к сокету обновлений TLG с запрещенного ИП: " .. l_csock:GetIP())

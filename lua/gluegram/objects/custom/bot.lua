@@ -1,10 +1,4 @@
 local BOT = TLG.NewObjectBase("BOT")
-BOT.__call = function(self,...) return self:AddCommand(...) end
-
--------------------------------------------
-
-require("bromsock")
-
 
 -------------------------------------------
 
@@ -17,48 +11,25 @@ function BOT:GetToken()
 end
 
 -------------------------------------------
+-- Создает хук, на который кидает апдейты с бота
+function BOT:SetListener(sName,...)
+	TLG.GetListener(sName)(function(UPD)
+		local name = self:Name()
+		hook.Run(name[1]:upper() .. name:sub(2) .. "BotUpdated",UPD)
+		-- dion > Dion
+	end,...)
 
--- В fCallback будут передаваться новые UPDATE объекты
-function BOT:SetListener(sName,fCallback,...)
-	TLG.GetListener(sName)(fCallback,...)
 	return self
 end
 
+-- Создает перехватчик апдейтов бота
+function BOT:HandleUpdates(fCallback,sUniqueName)
+	local name = self:Name()
+	hook.Add(name[1]:upper() .. name:sub(2) .. "BotUpdated","UpdateHook-" .. sUniqueName,fCallback)
+	return self
+end
 
 -------------------------------------------
-
--- Update object in args
--- sName arg is optional. Just for remove ability in advance
--- do not use it if u don't understand how it work 
-function BOT:UpdatesHook(fCallback,hookName)
-	-- /Not sure this is needed
-	self.upd_cb = self.upd_cb or {}
-	hookName = hookName or #self.upd_cb + 1
-
-	self.upd_cb[hookName] = fCallback
-	-- \Not sure this is needed
-
-
-	-- tostring нужен из-за гребанной hook либы в ULIB, наче будет
-	-- lua/includes/util.lua:181: attempt to index local 'object' (a number value)
-	-- 2. Call - addons/ulx_ulib/lua/ulib/shared/hook.lua:121
-	-- 3. callback - addons/gluegram/lua/gluegram/objects/custom/bot.lua:106
-	hook.Add("TLG.OnBotUpdate_" .. self.name,tostring(hookName),fCallback)
-
-	return self
-end
-
--- CallbackQuery obj in args
-function BOT:CBQHook(fCallback,hookName)
-	self.cbq_cb = self.cbq_cb or {}
-	hookName = hookName or #self.cbq_cb + 1
-
-	self.cbq_cb[hookName] = fCallback
-
-	hook.Add("TLG.OnBotCallbackQuery_" .. self.name,tostring(hookName),fCallback)
-
-	return self
-end
 
 -- Создаем объект сообщения
 function BOT:Message(iTo,sText)
@@ -83,60 +54,26 @@ function BOT:EditMessage(MSG,sText,bAppend)
 		:SetChatID(MSG["chat"]["id"])
 end
 
-
 -------------------------------------------
--- Командный процессор
--------------------------------------------
-function BOT:Auth(USER,bAuth)
-	self.sessions[USER:ID()] = bAuth and USER or nil -- не даем записать false. Лишняя память)
-end
 
--- Проверяется, если "not CMD:IsPublic()"
-function BOT:GetSession(USER)
-	return self.sessions[USER:ID()]
-end
+-- Модуль должен быть в /gluegram/modules
+function BOT:AddModule(sName)
+	local returned_func = CompileFile("gluegram/modules/" .. sName .. ".lua")()
 
--- Создаем объект обработчика входящих команд
--- Подробнее в command.lua
-function BOT:AddCommand(sCmd,fCallback)
-	sCmd = string.lower(sCmd)
+	if returned_func then
+		returned_func(self)
+	end
 
-	local obj = TLG.SetMeta({
-		func = fCallback,
-		cmd  = sCmd,
+	-- For BOT:IsModuleConnected(sName) 
+	self.modules = self.modules or {}
+	self.modules[sName] = true
 
-		bot = self -- assign this bot for ability to quick answer from commands
-	},"COMMAND")
+	TLG.Print("Подключили модуль " .. sName .. " к " .. self:Name())
 
-	self.commands[sCmd] = obj
-
-	return obj
-end
-
-function BOT:GetCommand(sCmd)
-	return self.commands[sCmd]
-end
-
-function BOT:GetCommands()
-	return self.commands
-end
-
--- Может быть несколько гмод серверов с одинаковыми виртуальными ботами, но все они будут подключены к 1 боту телеграма
--- Если все боты будут считаться "Мастерами" (главными), то многие сообщения, типа "Нужно ввести название сервера" при вводе /login без аргументов
--- будут отправляться всеми ботами в один чат, тем самым захламляя его. Это не очень приятно, правда?
-
--- Этим методом мы делаем "Главного" бота. Т.е. того, который будет сам "отвечать" за определенные "поступки"
-function BOT:SetMaster(bMaster)
-	self.master = bMaster
 	return self
 end
 
-function BOT:IsMaster()
-	return self.master
-end
 
--- Функция будет выполняться после /login botname
-function BOT:SetMotd(fMotd)
-	self.motd = fMotd
-	return self
+function BOT:IsModuleConnected(sName)
+	return self.modules[sName] == true
 end
