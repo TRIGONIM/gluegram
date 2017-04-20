@@ -21,19 +21,24 @@ setmetatable(BOT,BOT_MT)
 
 
 
-
-
+-- Временная таблица. Потом будет через БД с командами управления юзерами
+-- /addaccess chat_id kosson, /removeaccess chat_id delta
+local access = {
+	[TLG_AMD] = true,
+	[TLG_DOS] = true,
+	[TLG_EAGLE] = true,
+}
 
 -- login
 BOT("login",function(MSG,args)
-	if MSG:From():Login() ~= "amd_nick" then return "Бот пока выключен" end
+	if !access[MSG:From():ID()] then return "Бот пока выключен" end
 
 	if !args[1] and (!BOT.IsMaster or BOT:IsMaster()) then -- если не подключен экстра модуль (.IsMaster)
 		return "Нужно ввести кодовое название бота, к которому хотите подключиться. Пример: /login " .. BOT:Name()
 	end
 
 	--                                  \/ /login *, /login ser*er
-	if args[1] == BOT:Name() or string.find(BOT:Name(),args[1]) then
+	if args[1] == BOT:Name() or string.find(BOT:Name(),args[1]) or args[1] == "*" then
 		BOT:Auth(MSG:From(),true)
 		return "подключен." .. (BOT.motd and ("\n\nMOTD:\n" .. BOT.motd()) or "")
 	end
@@ -46,7 +51,7 @@ end)
 
 -- exit
 BOT("exit",function(MSG,args)
-	if !args[1] or args[1] == BOT:Name() or string.find(BOT:Name(),args[1]) then
+	if BOT:GetSession(MSG:From()) and ( !args[1] or args[1] == BOT:Name() or string.find(BOT:Name(),args[1]) ) then
 		BOT:Auth(MSG:From(),false)
 		return "отключились. Бай-бай"
 	end

@@ -71,7 +71,10 @@ BOT:HandleUpdates(function(UPD)
 
 			-- Нужна авторизация, а мы не авторизированы
 			if BOT:IsModuleConnected("commands_auth") and !CMD:IsPublic() and !BOT:GetSession(USER) then
-				BOT:Message(USER,"Вы не авторизированы. /login " .. BOT:Name()):Send()
+				-- if BOT:IsMaster() then
+				-- 	BOT:Message(MSG:Chat(),"Вы не авторизированы. /login " .. BOT:Name()):Send()
+				-- end
+
 				return
 			end
 
@@ -80,7 +83,7 @@ BOT:HandleUpdates(function(UPD)
 			processCommand(BOT,CMD,MSG,USER, table_remove(pieces,1))
 
 		else
-			BOT:Message(USER,BOT:Name() .. " - команды " .. cmd .. " не существует"):Send()
+			BOT:Message(MSG:Chat(),BOT:Name() .. " - команды " .. cmd .. " не существует"):Send()
 		end
 	end
 end,"module_commands")

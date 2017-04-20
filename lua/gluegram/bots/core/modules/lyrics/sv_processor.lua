@@ -37,10 +37,25 @@ BOT:AddCommand("lyrics",function(MSG,args)
 			local name    = tr.track_name
 			local trackid = tr.track_id
 
-			IKB:Line(IKB:Button(("%s - %s"):format(author,name)):SetCallBackData("lyr;" .. trackid))
+			IKB:Line(IKB:Button(("%s - %s"):format(author,name)):SetCallBackData({
+				track_id = trackid
+			}))
 		end
 
-		BOT:Message(MSG:Chat(), "Вот такая дичь короче тут:"):SetReplyMarkup(IKB):Send()
+		local msg = BOT:Message(MSG:Chat(), "Вот такая дичь короче тут:"):SetReplyMarkup(IKB)
+
+		TLG.SendAndHandleCBQ(BOT,msg,function(CBQ)
+			LYR.getLyrics(function(lyrics)
+				local lyrtext = lyrics and lyrics["lyrics_body"] ~= "" and lyrics["lyrics_body"]
+
+				if !lyrtext then
+					BOT:Message(CBQ["message"]["chat"],"Увы, нет текста к этой песенке. Попробуйте другой код"):Send()
+					return
+				end
+
+				BOT:Message(CBQ["message"]["chat"],lyrtext):Send()
+			end, CBQ:Data().track_id)
+		end)
 	end) -- конец поиска песен
 
 
@@ -53,19 +68,3 @@ end)
 
 
 
-
-BOT:CBQHook(function(CBQ)
-	-- Надо придумать способ получше для обработки кнопочек
-	if string.sub(CBQ:Data(),1,4) ~= "lyr;" then return end
-
-	LYR.getLyrics(function(lyrics)
-		local lyrtext = lyrics and lyrics["lyrics_body"] ~= "" and lyrics["lyrics_body"]
-
-		if !lyrtext then
-			BOT:Message(CBQ["message"]["chat"],"Увы, нет текста к этой песенке. Попробуйте другой код"):Send()
-			return
-		end
-
-		BOT:Message(CBQ["message"]["chat"],lyrtext):Send()
-	end,string.sub(CBQ:Data(),5)) -- срезаем lyr; в начале
-end,"lyrics")

@@ -8,6 +8,9 @@ function ta.TLGMSG(chat_id,msg)
 	BOT:Message(chat_id,"[" .. TLG.SERV .. "] " .. msg):Send()
 end
 
+-- function ta.PrepareTLGMSG(iToChatID,msg)
+-- 	return BOT:Message(chat_id,"[" .. TLG.SERV .. "] " .. msg)
+-- end
 
 -- обратная совместимость
 -- todo убрать
@@ -23,6 +26,6 @@ function TLG.notifyGroup(groupname_or_ids,message)
 	-- Если строка-название группы
 	else
 		-- Там только root бывает
-		ta.TLGMSG(TLF_CONF_REPORTS,message)
+		ta.TLGMSG(TLG_CONF_REPORTS,message)
 	end
 end

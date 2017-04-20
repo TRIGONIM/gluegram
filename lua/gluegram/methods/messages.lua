@@ -1,6 +1,6 @@
 local SEND = {}
 
-function SEND:SetParseMode(sMode)
+function SEND:SetParseMode(sMode) -- markdown, html
 	return self:Param("parse_mode",sMode)
 end
 
@@ -13,7 +13,7 @@ function SEND:DisableNotification(bDisable)
 end
 
 function SEND:ReplyTo(iReplyToMessageId)
-	return self:Param("reply_to_message_id",iReplyToMessageId)
+	return self:Param("reply_to_message_id", tostring(iReplyToMessageId))
 end
 
 -- InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardHide or ForceReply

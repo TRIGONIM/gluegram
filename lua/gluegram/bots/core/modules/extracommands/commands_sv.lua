@@ -128,3 +128,74 @@ BOT:AddCommand("logchat",function(MSG)
 
 	return "Логирование чата включено"
 end):SetDescription("Ретрансляция всех сообщения из чата связанного сервера в чат телеграмма. После деавторизации сообщения продолжат перехватываться, если не выключить вручную")
+
+
+local pending_tasks = {} -- TODO сделать, чтобы другие юзеры не могли удалять чужие задачи
+BOT:AddCommand("timer",function(MSG,args)
+	if args[1] == "remove" then
+		args[2] = tonumber(args[2])
+
+		if !pending_tasks[ args[2] ] then
+			return "Задача с ID " .. args[2] .. " отсутствует. Попробуйте /timer list"
+		end
+
+		pending_tasks[ args[2] ] = nil
+
+		return "Задача удалена и не выполнится"
+	end
+
+	if args[1] == "list" then
+		local cmds = "\n"
+		for id,t in pairs(pending_tasks) do -- pairs, чтобы ничего не прпоустить, если удалить из сереединки эллемент
+			cmds = cmds .. "`" .. id .. "` *" .. t.cmd.cmd .. "* " .. table.concat(t.args," ") .. "\n" ..
+			"`Выполнится через " .. timeToStr(t.call_in - os.time()) .. "`\n\n"
+		end
+
+		return cmds ~= "" and cmds or "Список пуст", "markdown"
+	end
+
+	local mins,scmd = args[1],args[2]
+	local err =
+		!mins and "Не указано время таймера" or
+		!tonumber(mins) and "Время нужно указывать числом" or
+		!scmd and "Не указано действие (команда)"
+
+	if err then
+		return err
+	end
+
+	local CMD = BOT:GetCommand(scmd)
+	if !CMD then
+		return "Команды " .. scmd .. " не существует"
+	end
+
+	local tArgs = {}
+	for i = 3,#args do
+		tArgs[#tArgs + 1] = args[i]
+	end
+
+	local id = table.insert(pending_tasks,{
+		cmd     = CMD,
+		args    = tArgs,
+		call_in = os.time() + 60 * mins
+	})
+
+	timer.Simple(60 * mins,function()
+		local task = pending_tasks[id]
+		if task then
+			task.cmd:Call(MSG, task.args)
+			pending_tasks[id] = nil
+		end
+	end)
+
+	return "Команда выполнится через *" .. mins .. "* мин." ..
+	"\n*ID задачи*: " .. id ..
+	"\nВведите /timer remove " .. id .. " для остановки",
+		"markdown"
+end)
+	:SetDescription(
+		"Выполняет команду с задержкой. " ..
+		"Полезно для, например, рестарта сервера через время, если сам хочешь спать и нет возможности офнуть. " ..
+		"Или же для выключения логгинга сообщения чата"
+	)
+	:SetHelp("/timer MINS CMD CMD_ARGS. /timer list. /timer remove ID. /timer 1 cmd say Это сообщение через минуту напишется от консоли")

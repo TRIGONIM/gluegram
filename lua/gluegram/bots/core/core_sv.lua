@@ -3,9 +3,9 @@ local BOT = TLG("167720993:AAEzqbwu8Jpq9-L3tblzrPXR1t_ywYcx5Fw",TLG.SERV)
 BOT:AddModule("commands"):AddModule("commands_auth"):AddModule("bot_extra")
 
 BOT:SetMaster(TLG.SERV == "kosson")
-BOT:SetListener("socket",29000 + ServerID())
+BOT:SetListener("socket",29000 + SERVERS:ID())
 BOT:SetMotd(function()
-	return "🕗 Аптайм сервера: " .. string.NiceTime(CurTime()) .. ". ID: " .. ServerID()
+	return "🕗 Аптайм сервера: " .. string.NiceTime(CurTime()) .. ". ID: " .. SERVERS:ID()
 end)
 
 

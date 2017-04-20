@@ -27,8 +27,8 @@ function IKBB:SetURL(sUrl)
 end
 
 -- https://tlgrm.ru/docs/bots/api#callbackquery
-function IKBB:SetCallBackData(sData)
-	self.callback_data = sData
+function IKBB:SetCallBackData(tData)
+	self.callback_data = pon.encode(tData)
 	return self
 end
 

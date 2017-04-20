@@ -51,7 +51,6 @@ end
 function TLG.Request(sMethod,sToken)
 	local METH = TLG.METHODS[sMethod]
 
-
 	local REQ = setmetatable({
 		token = sToken,
 		params = {},
@@ -73,6 +72,10 @@ function TLG.Request(sMethod,sToken)
 		end,
 
 		Send = function(self,fCallback)
+			-- print("https://api.telegram.org/bot" .. self.token .. "/" .. METH.method)
+			-- PrintTable(self)
+			-- print("self, prt")
+
 			http.Post(
 				"https://api.telegram.org/bot" .. self.token .. "/" .. METH.method,
 				self.params,function(dat)
@@ -82,15 +85,18 @@ function TLG.Request(sMethod,sToken)
 						TLG.LogError({
 							dat.error_code,
 							dat.description,
-							debug.traceback(),
+							METH.method,
+							string.Implode("\n",self.params)
 						})
+
+
 
 						return
 					end
 
 
 					if fCallback then
-						fCallback(self.cb_object and TLG.SetMeta(dat,self.cb_object) or dat)
+						fCallback(METH.cb_object and TLG.SetMeta(dat.result,METH.cb_object) or dat)
 					end
 				end
 			)

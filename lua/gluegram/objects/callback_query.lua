@@ -59,7 +59,7 @@ end
 
 -- string
 function CBQ:Data()
-	return self.data
+	return pon.decode(self.data)
 end
 
 -- string

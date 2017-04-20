@@ -18,13 +18,13 @@ function TLG.GetMeta(sObjectName)
 	return FindMetaTable("TLG." .. sObjectName)
 end
 
-function TLG.NewObjectBase(sType)
+function TLG.NewObjectBase(sObjectName)
 	local OBJ = {}
 	OBJ.__index = OBJ
 
-	debug.getregistry()["TLG." .. sType] = OBJ
+	debug.getregistry()["TLG." .. sObjectName] = OBJ
 
-	TLG.AddObject(sType,OBJ)
+	TLG.AddObject(sObjectName,OBJ)
 
 	return OBJ
 end

@@ -1,6 +1,6 @@
 require("pon")
 
-TLG.SERV = TL.SERV
+TLG.SERV = SERVERS:Name()
 
 function TLG.DBQ(sQuery,fCallback)
 	Q(sQuery,fCallback)
@@ -9,6 +9,5 @@ end
 table.ConcatKeys = table.ConcatKeys
 NM = NM
 
--- ServerID()
+-- SERVERS:ID(), SERVER:Name()
 -- includeSV()
--- Написать string.StartsWith(), проверить производительность с sub и ipairs и добавить сюда
