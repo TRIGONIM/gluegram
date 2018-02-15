@@ -4,7 +4,7 @@ LYR.APIHOST = "http://api.musixmatch.com/ws/1.1/"
 LYR.APIKEY  = "50fdfd15bb09729321cbf47a50aa7f3d"
 
 
-
+-- Скопировано в yandex_pdd
 function LYR.processAPI(method,keyvalues,callback)
 	for k,v in pairs(keyvalues) do
 		keyvalues[k] = tostring(v)

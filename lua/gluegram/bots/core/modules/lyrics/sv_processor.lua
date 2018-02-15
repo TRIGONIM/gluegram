@@ -1,5 +1,5 @@
 
-local BOT = TLG.GetBot(TLG.SERV)
+local BOT = TLG_CORE_BOT
 
 
 BOT:AddCommand("lyrics",function(MSG,args)

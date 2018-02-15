@@ -1,4 +1,3 @@
-
 local CMD = TLG.NewObjectBase("COMMAND")
 
 --------------------------------
@@ -42,7 +41,7 @@ end
 
 -- Может ли каждый желающий использовать команду
 -- Если не указано или false, то проверка на авторизованность (:IsPublic())
--- происходит в objects/custom/bot.lua 
+-- происходит в objects/custom/bot.lua
 function CMD:SetPublic(bPublic)
 	self.public = bPublic
 	return self

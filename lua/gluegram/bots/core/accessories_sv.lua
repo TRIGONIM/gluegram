@@ -1,15 +1,11 @@
-
-
-local BOT = TLG.GetBot(TLG.SERV)
-
 -- TODO перенести в TADMIN, когда будет возможность создать
 -- нормального отдельного модульного бота без зависимостей
 function ta.TLGMSG(chat_id,msg)
-	BOT:Message(chat_id,"[" .. TLG.SERV .. "] " .. msg):Send()
+	TLG_CORE_BOT:Message(chat_id,"*" .. TLG.SERV .. "*: " .. msg):SetParseMode("markdown"):Send()
 end
 
 -- function ta.PrepareTLGMSG(iToChatID,msg)
--- 	return BOT:Message(chat_id,"[" .. TLG.SERV .. "] " .. msg)
+-- 	return TLG_CORE_BOT:Message(chat_id,"[" .. TLG.SERV .. "] " .. msg)
 -- end
 
 -- обратная совместимость
