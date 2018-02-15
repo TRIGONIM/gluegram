@@ -10,6 +10,7 @@
 
 TLG.BOTS      = TLG.BOTS      or {}
 TLG.LISTENERS = TLG.LISTENERS or {}
+TLG.OBJECTS   = TLG.OBJECTS   or {}
 
 
 setmetatable(TLG, {
@@ -54,7 +55,6 @@ function TLG.NewBot(sToken,sName)
 	if TLG.BOTS[sName] then return TLG.BOTS[sName] end -- закомментить, если надо изменить метафункцию
 
 	local bot_obj = setmetatable({
-		commands = {},
 		sessions = {}, -- авторизированные пользователи
 
 		token = sToken,
@@ -81,4 +81,37 @@ end
 
 function TLG.GetListener(sName)
 	return TLG.LISTENERS[sName]
+end
+
+
+
+--[[-------------------------------------------------------------------------
+	OBJECTS
+---------------------------------------------------------------------------]]
+function TLG.AddObject(id,tInf)
+	TLG.OBJECTS[id] = tInf
+end
+
+-- id это название объекта, как указано в документации
+function TLG.GetObject(id)
+	return TLG.OBJECTS[id]
+end
+
+function TLG.SetMeta(tab,sObjectName)
+	return setmetatable(tab,TLG.GetObject(sObjectName))
+end
+
+function TLG.GetMeta(sObjectName)
+	return FindMetaTable("TLG." .. sObjectName)
+end
+
+function TLG.NewObjectBase(sObjectName)
+	local OBJ = {}
+	OBJ.__index = OBJ
+
+	debug.getregistry()["TLG." .. sObjectName] = OBJ
+
+	TLG.AddObject(sObjectName,OBJ)
+
+	return OBJ
 end

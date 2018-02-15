@@ -3,44 +3,29 @@ local METHOD = {}
 METHOD.__index = METHOD
 
 
--- fProc форматирует параметр перед выполнением запроса
-function METHOD:AddParam(sParam,fProc)
-	self.needparams[#self.needparams + 1] = {
-		name = sParam,
-		proc = fProc
-	}
-
-	return self
-end
-
--- Если не указать, то вернется просто таблица
-function METHOD:CallbackObject(sObjectName)
-	self.cb_object = sObjectName
-	return self
-end
-
-
-
-
-
 
 TLG.METHODS = TLG.METHODS or {}
-function TLG.RegisterMethod(sMethod,META)
+function TLG.RegisterMethod(sMethod,META,sCallbackObjectName_)
 	--if TLG.METHODS[sMethod] then return TLG.METHODS[sMethod] end -- uncomment on debug
 	META.__index = META
 
-	local METH = setmetatable({
-		method = sMethod,
-		meta   = META,
+	TLG.METHODS[sMethod] = {
+		meta = META,
+		cb_object = sCallbackObjectName_
+	}
 
-		needparams = {},
-	},METHOD)
-
-	TLG.METHODS[sMethod] = METH
-
-	return METH
+	return TLG.METHODS[sMethod]
 end
 
+
+local function tableToString(t)
+	local s = "\n\n\n"
+	for k,v in pairs(t) do
+		s = s .. " >> " .. k .. " <-> " .. v .. " <<\n"
+	end
+
+	return s .. "\n\n\n"
+end
 
 
 --[[-------------------------------------------------------------------------
@@ -55,29 +40,18 @@ function TLG.Request(sMethod,sToken)
 		token = sToken,
 		params = {},
 
-		-- Заполняет обязательные параметры в порядке добавления METH:AddParam
-		BindParams = function(self,...)
-			local args = {...}
-
-			for i,param in ipairs(METH.needparams) do
-				self.params[param["name"]] = param["proc"] and param["proc"](args[i]) or args[i]
-			end
-
-			return self
-		end,
-
-		Param = function(self,sParam,sValue)
-			self["params"][sParam] = sValue
+		SetParam = function(self,sParam,value)
+			self.params[sParam] = value and tostring(value) or nil
 			return self
 		end,
 
 		Send = function(self,fCallback)
-			-- print("https://api.telegram.org/bot" .. self.token .. "/" .. METH.method)
+			-- print("https://api.telegram.org/bot" .. self.token .. "/" .. sMethod)
 			-- PrintTable(self)
 			-- print("self, prt")
 
 			http.Post(
-				"https://api.telegram.org/bot" .. self.token .. "/" .. METH.method,
+				"https://api.telegram.org/bot" .. self.token .. "/" .. sMethod,
 				self.params,function(dat)
 					dat = util.JSONToTable(dat)
 
@@ -85,11 +59,9 @@ function TLG.Request(sMethod,sToken)
 						TLG.LogError({
 							dat.error_code,
 							dat.description,
-							METH.method,
-							string.Implode("\n",self.params)
+							sMethod,
+							tableToString(self.params)
 						})
-
-
 
 						return
 					end

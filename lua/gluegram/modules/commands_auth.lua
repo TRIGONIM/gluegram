@@ -1,6 +1,4 @@
-return function(BOT)
-local BOT_MT = table.Copy(getmetatable(BOT))
-
+local BOT_MT = TLG.GetObject("BOT")
 
 function BOT_MT:Auth(USER,bAuth)
 	self.sessions[USER:ID()] = bAuth and USER or nil -- не даем записать false. Лишняя память)
@@ -17,7 +15,8 @@ function BOT_MT:SetMotd(fMotd)
 	return self
 end
 
-setmetatable(BOT,BOT_MT)
+
+
 
 
 
@@ -25,9 +24,12 @@ setmetatable(BOT,BOT_MT)
 -- /addaccess chat_id kosson, /removeaccess chat_id delta
 local access = {
 	[TLG_AMD] = true,
-	[TLG_DOS] = true,
+	-- [TLG_DOS] = true,
 	[TLG_EAGLE] = true,
 }
+
+local BOT = BOTMOD
+if !BOT then return end -- lua refresh
 
 -- login
 BOT("login",function(MSG,args)
@@ -35,6 +37,10 @@ BOT("login",function(MSG,args)
 
 	if !args[1] and (!BOT.IsMaster or BOT:IsMaster()) then -- если не подключен экстра модуль (.IsMaster)
 		return "Нужно ввести кодовое название бота, к которому хотите подключиться. Пример: /login " .. BOT:Name()
+
+	-- Не мастер сервере, но не введен сервер
+	elseif !args[1] then
+		return
 	end
 
 	--                                  \/ /login *, /login ser*er
@@ -59,4 +65,3 @@ end)
 	:SetPublic(true)
 	:SetHelp("Параметром принимает точное название бота или же его часть. Поддерживает \"*\"")
 	:SetDescription("Ручное отключение от указанного бота или от всех, если название не указано. После отключения все команды перестанут вводиться до следующей авторизации (полезно при работе с несколькими серверами)")
-end
