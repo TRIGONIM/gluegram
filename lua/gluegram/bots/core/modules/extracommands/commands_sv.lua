@@ -1,4 +1,4 @@
-local BOT = TLG.GetBot(TLG.SERV)
+local BOT = TLG_CORE_BOT
 
 -- bots
 BOT:AddCommand("bots",function(MSG)
@@ -45,14 +45,15 @@ BOT:AddCommand("serverinfo",function(MSG)
 	for k,v in pairs(ents.GetAll()) do
 		if !IsValid(v) or v:GetPersistent() then continue end
 
-		if v.FPPOwnerID then
-			plys_props[v.FPPOwnerID] = plys_props[v.FPPOwnerID] or {}
-			plys_props[v.FPPOwnerID][#plys_props[v.FPPOwnerID] + 1] = v
+		if IsValid(v:CPPIGetOwner()) then
+			local _, uid = v:CPPIGetOwner()
+			plys_props[uid] = plys_props[uid] or {}
+			plys_props[uid] [#plys_props[uid] + 1] = v
 		end
 	end
 
 	local props = 0 -- counter
-	for stid,t in pairs(plys_props) do
+	for _,t in pairs(plys_props) do
 		props = props + #t
 	end
 
@@ -102,6 +103,13 @@ end)
 	:AddAlias("test")
 	:SetDescription("Информация о текущем чате")
 
+local function tableConcat(t) -- с tostring
+	local s = ""
+	for i,v in ipairs(t) do
+		s = s .. tostring(v) .. " "
+	end
+	return s:sub(1,-2)
+end
 
 -- logchat
 local interceptors = {}
@@ -120,10 +128,17 @@ BOT:AddCommand("logchat",function(MSG)
 
 	interceptors[CHAT:ID()] = CHAT
 
-	hook.Add("PlayerSay","TLG.ChatIntercept",function(ply,txt,tm)
+	local function sendMsg(t)
 		for id,CHT in pairs(interceptors) do
-			BOT:Message(CHT, "(" ..  ply:Nick() .. "): " .. txt ):Send()
+			BOT:Message(CHT, t):Send()
 		end
+	end
+
+	hook.Add("cmd.OnCommandRun","TLG.ChatIntercept",function(pl,CMD,args)
+		sendMsg("[CMD] (" ..  pl:Nick() .. "): /" .. CMD:GetNiceName() .. " -> " .. tableConcat(args))
+	end)
+	hook.Add("PlayerSay","TLG.ChatIntercept",function(pl,txt,tm)
+		sendMsg((tm and "[TEAM] " or "") .. "(" ..  pl:Nick() .. "): " .. txt)
 	end)
 
 	return "Логирование чата включено"
@@ -148,7 +163,7 @@ BOT:AddCommand("timer",function(MSG,args)
 		local cmds = "\n"
 		for id,t in pairs(pending_tasks) do -- pairs, чтобы ничего не прпоустить, если удалить из сереединки эллемент
 			cmds = cmds .. "`" .. id .. "` *" .. t.cmd.cmd .. "* " .. table.concat(t.args," ") .. "\n" ..
-			"`Выполнится через " .. timeToStr(t.call_in - os.time()) .. "`\n\n"
+			"`Выполнится через " .. timeToStr(t.call_in - CurTime()) .. "`\n\n"
 		end
 
 		return cmds ~= "" and cmds or "Список пуст", "markdown"
@@ -177,7 +192,7 @@ BOT:AddCommand("timer",function(MSG,args)
 	local id = table.insert(pending_tasks,{
 		cmd     = CMD,
 		args    = tArgs,
-		call_in = os.time() + 60 * mins
+		call_in = CurTime() + 60 * mins
 	})
 
 	timer.Simple(60 * mins,function()

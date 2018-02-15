@@ -1,48 +1,22 @@
-local BOT = TLG.GetBot(TLG.SERV)
+local BOT = TLG_CORE_BOT
 
 
-local token = "95baf8e6ae5ebd31dee5f343304811794d8251fd00eb377ee22f493fb267d8bc1fde519812b7731e05cba"
-local function processRequest(sMethod,tParams,fCallback)
-	for k,v in pairs(tParams) do
-		tParams[k] = tostring(v) -- числа не употребляет
-	end
-
-	HTTP({
-		url        = "https://api.vk.com/method/" .. sMethod .. "?access_token=" .. token,
-		parameters = tParams,
-		success    = function(code,json,headers)
-			if !fCallback then return end
-
-			fCallback(util.JSONToTable(json)["response"])
-		end
-	})
+local function getConfs(sSearchTerm, fCallback)
+	VK_ACCOUNT:SearchDialogs(sSearchTerm, fCallback)
 end
 
-
-local function getConfs(sSearchTerm,fCallback)
-	processRequest("messages.searchDialogs",{
-		q = sSearchTerm,
-	},fCallback)
+local function showConfUsers(conf_id, fCallback)
+	VK_ACCOUNT:GetChatUsers(conf_id, fCallback)
 end
 
-local function showConfUsers(conf_id,fCallback)
-	processRequest("messages.getChatUsers",{
-		chat_id = conf_id,
-		fields  = "-", -- чтобы получить имена и фамилии. Иначе вернет только ИДшники
-	},fCallback)
-end
-
-local function kickConfUser(conf_id, user_id, fOnFinish)
-	processRequest("messages.removeChatUser",{
-		chat_id = conf_id,
-		user_id = user_id
-	},fOnFinish)
+local function kickConfUser(conf_id, user_id, fCallback)
+	VK_ACCOUNT:RemoveChatUser(conf_id, user_id, fCallback)
 end
 
 
 
 
--- tlg_msg - сообщение, которое нужно отредактировать и отобразитьь результат выполнения запроса 
+-- tlg_msg - сообщение, которое нужно отредактировать и отобразитьь результат выполнения запроса
 local function processKick(conf_id, user_id, tlg_msg)
 	kickConfUser(conf_id, user_id, function(res)
 		BOT:EditMessage(tlg_msg, res == 1 and

@@ -30,5 +30,5 @@ function UPD:ChosenInlineResult()
 end
 
 function UPD:CallbackQuery()
-	return TLG.SetMeta(self.callback_query,"CallbackQuery")
+	return self.callback_query and TLG.SetMeta(self.callback_query,"CallbackQuery") or nil
 end

@@ -1,4 +1,6 @@
-local BOT = TLG.GetBot(TLG.SERV)
+-- if !KOSSON then return end
+
+local BOT = TLG_CORE_BOT
 
 
 --[[-------------------------------------------------------------------------
@@ -22,12 +24,42 @@ function TLG.SendAndHandleCBQ(bot,msg,fCallback)
 	end)
 end
 
-BOT:CBQHook(function(CBQ)
+BOT:HandleCBQ(function(CBQ)
 	if BOT.CBQHandlers[ CBQ.message.message_id ] then
 		BOT.CBQHandlers[ CBQ.message.message_id ](CBQ)
 	end
 end,"SendAndHandleCBQ")
 
+
+
+local K,B = "0123456789ABCDEF",16
+local function DEC_HEX(n)
+	n = tonumber(n)
+	local s,D = ""
+
+	local i = 0
+	while n > 0 do
+		i   = i + 1
+		n,D = math.floor(n / B), n % B + 1
+		s   = K[D] .. s
+	end
+
+	return s
+end
+
+-- tonumber("num",16) с большими числами почему-то работает некорректно
+local function HEX_DEC(hex)
+	return tonumber("0x" .. hex)
+end
+
+local function CompressSID(sid) -- STEAM_0:1:55598730 > 0155598730 > 5155598730 > 25D52238A
+	return DEC_HEX( "1" .. string.Implode("",{sid:match("^STEAM_(%d):(%d):(%d+)$")}) )
+end --               /\ чтобы спереди не было 0. Можно и без приставки, но это не удлиняет HEX SteamID
+
+local function NormalizeSID(sid) -- наоборот
+	sid = tostring(HEX_DEC(sid)):sub(2) -- двойная конвертация строка-число-строка... и срез первой цифры
+	return "STEAM_" .. sid[1] .. ":" .. sid[2] .. ":" .. sid:sub(3)
+end
 
 
 
@@ -46,25 +78,23 @@ local msg = [[
 	✉ %s
 ]]
 
-local om_msg = "Администратор @%s отреагировал на событие изменения репутации и удалил ее.\n\nСообщение события:\n%s"
+local om_msg = "Администратор @%s отреагировал на событие изменения вашей репутации и удалил ее.\n\nСообщение события:\n%s"
 
-local function repRem(CBQ,id,author_sid)
+local function repRem(CBQ, id, author_sid, target_sid)
 	REP.RemAction(id,author_sid,true,function(ok)
 		local login = CBQ:From():Login()
 
 		local IKB = TLG.InlineKeyboard()
 		IKB:Line(
-			IKB:Button("Бан час"):SetCallBackData({
-				ban = true,
-				rep_id = id,
-				sid  = author_sid,
-				term = 60
+			IKB:Button("Бан 15m"):SetCallBackData({
+				ban = 15,
+				sFr = CompressSID(author_sid),
+				s   = SERVERS:ID()
 			}),
-			IKB:Button("Бан сутки"):SetCallBackData({
-				ban = true,
-				rep_id = id,
-				sid  = author_sid,
-				term = 1440
+			IKB:Button("Бан 60m"):SetCallBackData({
+				ban = 60,
+				sFr = CompressSID(author_sid),
+				s   = SERVERS:ID()
 			})
 		)
 
@@ -74,8 +104,13 @@ local function repRem(CBQ,id,author_sid)
 
 		if !ok then return end
 
-		OM.SendMessage(util.SteamIDTo64(author_sid),
-			om_msg:format(login, string.Safe( CBQ:Message()["text"] )),
+		OM.SendMessage(util.SteamIDTo64(target_sid),
+			om_msg:format(login, string.Safe( CBQ:Message()["text"] ..
+				"\n\n======================" ..
+				"\nМы получаем сообщение с репутацией в наш Telegram бот (https://img.qweqwe.ovh/1504522587957.png) и удаляем ее," ..
+				" если в ней не описана ситуация, на основании которой выдана репутация," ..
+				" чтобы репутация действительно имела большую ценность"
+			)),
 
 			"Удаление репутации"
 		)
@@ -83,45 +118,54 @@ local function repRem(CBQ,id,author_sid)
 end
 
 
-hook.Add("OnRepAdd","TLG",function(sFrom,pTo,iCategory,message,id)
+hook.Add("OnRepAdd","TLG",function(sFrom,for_sid,iCategory,message,id)
 	local IKB = TLG.InlineKeyboard()
 	IKB:Line(
-		IKB:Button("Удалить"):SetCallBackData({
-			rem = true,
-			rep_id = id,
-			sid    = sFrom
+		IKB:Button("Удалить"):SetCallBackData({ --------------- если потребуется сильнее сжать данные, то можно попробовать не передавать Sid автора репы, а получать его позже
+			rem = id,
+			sFr = CompressSID(sFrom), -- sidFrom
+			sTo = CompressSID(for_sid), -- sidTo
+			s   = SERVERS:ID()
 		})
 	)
 
 
-	local MSG = BOT:Message(TLG_CONF_MOD, msg:format(
+	BOT:Message(TLG_CONF_MOD, msg:format(
 		id,
 		nickSid(sFrom),
-		nickSid(pTo:SteamID()),
+		nickSid(for_sid),
 		REP.getCatNameByID(iCategory),
 		message
-	)):SetReplyMarkup(IKB,BOT)
+	)):SetReplyMarkup(IKB):Send()
 
-	TLG.SendAndHandleCBQ(BOT,MSG,function(CBQ)
-		local dat = CBQ:Data()
-
-		if dat.ban then
-			RunConsoleCommand("ulx","banid",dat.sid,dat.term,"Ост. репутации с некорректной причиной")
-
-			-- Таймер, чтобы оверрайднуть только что измененное сообщение через repRem
-			timer.Simple(3,function()
-				BOT:EditMessage(CBQ:Message(),"\n• Автора заблокировал @" .. CBQ:From():Login(),true)
-					:Send()
-			end)
-
-		elseif dat.rem then
-			repRem(
-				CBQ,
-				dat.rep_id,
-				dat.sid
-			)
-
-		end
-	end)
 end)
 
+
+BOT:HandleCBQ(function(CBQ)
+	local dat = CBQ:Data()
+
+	-- Баны выдаем только на сервере, на котором выдана репа
+	-- Запрещаем банить ну других серверах
+	if dat.ban and dat.s == SERVERS:ID() then
+		RunConsoleCommand("ulx","banid",dat.sFr,dat.ban,"Ост. репутации с некорректной причиной")
+
+		-- Таймер, чтобы оверрайднуть только что измененное сообщение через repRem
+		timer.Simple(3,function()
+			BOT:EditMessage(CBQ:Message(),"\n• Автора заблокировал @" .. CBQ:From():Login(),true)
+				:Send()
+		end)
+	end
+
+	-- Удалять репутацию разрешаем только Коссону
+	if !KOSSON then return end
+
+	if dat.rem then
+		repRem(
+			CBQ,
+			dat.rem, -- id
+			NormalizeSID(dat.sFr), -- author steamid (его репу удалит и предложит бан)
+			NormalizeSID(dat.sTo)  -- targ's sid (ему придет сообщение о том, что нарушителя забанили)
+		)
+	end
+
+end,"REPMod")
