@@ -43,26 +43,11 @@ function CBQ:From()
 	return TLG.SetMeta(self.from,"User")
 end
 
--- !! string
-function CBQ:ChatInstance()
-	return self.chat_instance
-end
-
 function CBQ:Message()
 	return TLG.SetMeta(self.message,"Message")
 end
 
 -- string
-function CBQ:InlineMessageId()
-	return self.inline_message_id
-end
-
--- string
 function CBQ:Data()
 	return pon.decode(self.data)
-end
-
--- string
-function CBQ:GameShortName()
-	return self.game_short_name
 end
