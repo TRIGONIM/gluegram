@@ -2,14 +2,9 @@
 	TODO TODO TODO
 	• CMD:AddPassword()
 	• Замена TLG.notifyGroup везде
-	• TG.SendMessage тоже
 	• То же самое касается хэндлеров команд и нажатий кнопок, к примеру
 ---------------------------------------------------------------------------]]
-
-
-
 TLG.BOTS      = TLG.BOTS      or {}
-TLG.LISTENERS = TLG.LISTENERS or {}
 TLG.OBJECTS   = TLG.OBJECTS   or {}
 
 
@@ -52,18 +47,18 @@ end
 	BOTS
 ---------------------------------------------------------------------------]]
 function TLG.NewBot(sToken,sName)
-	if TLG.BOTS[sName] then return TLG.BOTS[sName] end -- закомментить, если надо изменить метафункцию
+	-- if TLG.BOTS[sName] then return TLG.BOTS[sName] end -- закомментить, если надо изменить метафункцию
 
-	local bot_obj = setmetatable({
+	local OBJ = setmetatable(TLG.BOTS[sName] or {
 		sessions = {}, -- авторизированные пользователи
 
 		token = sToken,
 		name  = sName,
 	}, TLG.GetMeta("BOT"))
 
-	TLG.BOTS[sName] = bot_obj
+	TLG.BOTS[sName] = OBJ
 
-	return bot_obj
+	return OBJ
 end
 
 function TLG.GetBot(sName)
@@ -72,46 +67,38 @@ end
 
 
 
---[[-------------------------------------------------------------------------
-	LISTENERS. No OOP
----------------------------------------------------------------------------]]
-function TLG.AddListener(sName,fHandler)
-	TLG.LISTENERS[sName] = fHandler
-end
-
-function TLG.GetListener(sName)
-	return TLG.LISTENERS[sName]
-end
-
-
 
 --[[-------------------------------------------------------------------------
 	OBJECTS
 ---------------------------------------------------------------------------]]
-function TLG.AddObject(id,tInf)
-	TLG.OBJECTS[id] = tInf
+function TLG.AddObject(uid, tInf)
+	TLG.OBJECTS[uid] = tInf
 end
 
--- id это название объекта, как указано в документации
-function TLG.GetObject(id)
-	return TLG.OBJECTS[id]
+-- uid это название объекта, как указано в документации
+function TLG.GetObject(uid)
+	return TLG.OBJECTS[uid]
 end
 
-function TLG.SetMeta(tab,sObjectName)
-	return setmetatable(tab,TLG.GetObject(sObjectName))
+function TLG.SetMeta(tab, uid)
+	return setmetatable(tab, TLG.GetObject(uid))
 end
 
-function TLG.GetMeta(sObjectName)
-	return FindMetaTable("TLG." .. sObjectName)
+function TLG.GetMeta(uid)
+	return FindMetaTable("TLG." .. uid)
 end
 
-function TLG.NewObjectBase(sObjectName)
+function TLG.NewObjectBase(uid)
+	if TLG.GetObject(uid) then
+		return TLG.GetObject(uid)
+	end
+
 	local OBJ = {}
 	OBJ.__index = OBJ
 
-	debug.getregistry()["TLG." .. sObjectName] = OBJ
+	debug.getregistry()["TLG." .. uid] = OBJ
 
-	TLG.AddObject(sObjectName,OBJ)
+	TLG.AddObject(uid,OBJ)
 
 	return OBJ
 end
