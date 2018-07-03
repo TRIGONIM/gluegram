@@ -10,8 +10,10 @@ MESSAGE:SetReplyMarkup(IKB)
 local IKB  = {} -- InlineKeyBoard
 IKB.__index  = IKB
 
-local IKBB = {} -- InlineKeyBoardButton
-IKBB.__index = IKBB
+
+function IKB:Line(...) -- объекты кнопок через запятые
+	table.insert(self.inline_keyboard,{...})
+end
 
 function TLG.InlineKeyboard()
 	return setmetatable({
@@ -19,7 +21,10 @@ function TLG.InlineKeyboard()
 	},IKB)
 end
 
---------------------------------------------
+-------------------------------------------------
+
+local IKBB = {} -- InlineKeyBoardButton
+IKBB.__index = IKBB
 
 function IKBB:SetURL(sUrl)
 	self.url = sUrl
@@ -30,22 +35,6 @@ end
 function IKBB:SetCallBackData(tData)
 	self.callback_data = pon.encode(tData)
 	return self
-end
-
-function IKBB:SetSwitchInlineQuery(sData)
-	self.switch_inline_query = sData
-	return self
-end
-
-function IKBB:SetSwitchInlineQueryCurrentChat(sData)
-	self.switch_inline_query_current_chat = sData
-	return self
-end
-
---------------------------------------------
-
-function IKB:Line(...) -- объекты кнопок через запятые
-	table.insert(self.inline_keyboard,{...})
 end
 
 function IKB:Button(sText)
