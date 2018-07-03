@@ -1,38 +1,49 @@
-local BOT = TLG.NewObjectBase("BOT")
-BOT.__call = function(self,sCmd,fCallback)
+local BOT_MT = TLG.NewObjectBase("BOT")
+BOT_MT.__call = function(self,sCmd,fCallback)
 	return self:AddCommand(sCmd,fCallback)
 end
 
 -------------------------------------------
 
-function BOT:Name()
+function BOT_MT:Name()
 	return self.name
 end
 
-function BOT:GetToken()
+function BOT_MT:GetToken()
 	return self.token
 end
 
--------------------------------------------
--- Создает хук, на который кидает апдейты с бота
-function BOT:SetListener(sName,...)
-	TLG.GetListener(sName)(function(UPD)
-		hook.Run("OnBotUpdate",self,UPD)
 
-		if UPD.message then
-			hook.Run("OnBotMessage",self,UPD:Message())
-		elseif UPD.callback_query then
-			hook.Run("OnBotCBQ",self,UPD:CallbackQuery())
-		end
-	end,...)
 
-	return self
+--[[-------------------------------------------------------------------------
+	Утилки
+---------------------------------------------------------------------------]]
+function BOT_MT:Request(METH, cb_typ)
+	return TLG.Request(METH):SetToken( self:GetToken() ):SetCallbackType(cb_typ)
 end
+
+
+
+--[[-------------------------------------------------------------------------
+	Апдейты
+---------------------------------------------------------------------------]]
+function BOT_MT:PushUpdate(tData)
+	hook.Run("OnBotUpdate", self, TLG.SetMeta(tData,"Update"))
+end
+
+-- TODO сделать отдельным кастомным модулем. Чтобы база кода была чиста от говна
+hook.Add("OnBotUpdate","CustomReceivers",function(BOT, UPD)
+	if UPD.message then
+		hook.Run("OnBotMessage",BOT,UPD:Message())
+	elseif UPD.callback_query then
+		hook.Run("OnBotCBQ",BOT,UPD:CallbackQuery())
+	end
+end)
 
 
 -- Тупо не представляю, как назвать
 -- Сжимает это: https://img.qweqwe.ovh/1513091039259.png
-function BOT:AddCallback(sHook, fCallback,sUniqueName)
+function BOT_MT:FormatCallback(sHook, fCallback,sUniqueName)
 	local selfname = self:Name()
 	hook.Add(sHook,selfname .. sUniqueName,function(bot,OBJ)
 		if bot:Name() == selfname then
@@ -43,65 +54,34 @@ function BOT:AddCallback(sHook, fCallback,sUniqueName)
 end
 
 -- Создает перехватчик апдейтов бота
-function BOT:HandleUpdate(fCallback,sUniqueName)
-	return self:AddCallback("OnBotUpdate",fCallback,sUniqueName)
+function BOT_MT:HandleUpdate(fCallback,sUniqueName)
+	return self:FormatCallback("OnBotUpdate",fCallback,sUniqueName)
 end
 
-function BOT:HandleMessage(fCallback,sUniqueName)
-	return self:AddCallback("OnBotMessage",fCallback,sUniqueName)
+function BOT_MT:HandleMessage(fCallback,sUniqueName)
+	return self:FormatCallback("OnBotMessage",fCallback,sUniqueName)
 end
 
-function BOT:HandleCBQ(fCallback,sUniqueName)
-	return self:AddCallback("OnBotCBQ",fCallback,sUniqueName)
+function BOT_MT:HandleCBQ(fCallback,sUniqueName)
+	return self:FormatCallback("OnBotCBQ",fCallback,sUniqueName)
 end
 
--------------------------------------------
 
--- Создаем объект сообщения
-function BOT:Message(iTo,sText)
-	if istable(iTo) then -- USER or CHAT object
-		iTo = iTo["id"]
-	end
-
-	return TLG.Request("sendMessage",self:GetToken())
-		:SetChatID(iTo)
-		:SetText(sText)
-end
-
--- Принимает объект сообщения полученной с сервера "Update" таблицы
--- По желанию, можно указать "text", иначе он не изменится
--- "sText" указывать ОБЯЗАТЕЛЬНО, если указан "bAppend"
-function BOT:EditMessage(MSG,sText,bAppend)
-	-- print("BOT:EditMessage(MSG,sText,bAppend)",MSG,sText,bAppend)
-	-- PrintTable(MSG)
-
-	-- Обновляем локальный текст
-	MSG["text"] = bAppend and (MSG["text"] .. sText) or sText or MSG["text"]
-
-	return TLG.Request("editMessageText",self:GetToken())
-		:SetNewText(MSG["text"])
-		:SetEditMessageID(MSG["message_id"])
-		:SetChatID(MSG["chat"]["id"])
-end
-
-function BOT:DeleteMessage(MSG)
-	return TLG.Request("deleteMessage",self:GetToken())
-		:SetDeletingMessageID(MSG["message_id"])
-		:SetChatID(MSG["chat"]["id"])
-end
 
 --[[-------------------------------------------------------------------------
-Модули
+	Расширения
 ---------------------------------------------------------------------------]]
--- Модуль должен быть в /gluegram/modules
-function BOT:AddModule(sName)
+-- /gluegram/extensions
+function BOT_MT:AddExtension(sName)
+	assert(file.Exists("gluegram/extensions/" .. sName .. ".lua","LUA"),"TLG Extension " .. sName .. ".lua not found")
+
 	BOTMOD = self -- bot module
-	include("gluegram/modules/" .. sName .. ".lua")
+	include("gluegram/extensions/" .. sName .. ".lua")
 	BOTMOD = nil
 
-	-- For BOT:IsModuleConnected(sName)
-	self.modules = self.modules or {}
-	self.modules[sName] = true
+	-- For BOT:IsExtensionConnected(sName)
+	self.extensions = self.extensions or {}
+	self.extensions[sName] = true
 
 	TLG.Print("Подключили модуль " .. sName .. " к " .. self:Name())
 
@@ -109,103 +89,100 @@ function BOT:AddModule(sName)
 end
 
 
-function BOT:IsModuleConnected(sName)
-	return self.modules and self.modules[sName] == true
+function BOT_MT:IsExtensionConnected(sName)
+	return self.extensions and self.extensions[sName] == true
 end
+
+
+
 
 --[[-------------------------------------------------------------------------
 	Команды
 ---------------------------------------------------------------------------]]
--- Утилиты
-local function processCommand(BOT_OBJ,CMD,MSG,USER,tArgs)
-	if tArgs[1] == "-help" and !tArgs[2] then
-		BOT_OBJ:Message(USER,CMD:Help() or "По этой команде нет дополнительной информации"):Send()
+function BOT_MT:ProcessCommand(MSG, cmd, argss_)
+	local CMD = self:GetCommands()[cmd]
+	if !CMD then return end
+
+	if hook.Run("TLG.CanRunCommand", self, MSG:From(), CMD, MSG) == false then
 		return
 	end
 
-	--                    "testasdfjhk asdf asd" in tArgs
-	local reply,parse_mode = CMD:Call(MSG,tArgs)
+	local tArgs = {}
+	if argss_ then
+		for _,arg in ipairs( string.Explode(" ", argss_) ) do
+			if arg == "" then continue end
+			tArgs[#tArgs + 1] = arg
+		end
+	end
+
+	local reply,parse_mode = CMD.func(MSG,tArgs,argss_)
 	if reply then
-		BOT_OBJ:Message(MSG["chat"]["id"], "[" .. BOT_OBJ:Name() .. "]: " .. reply )
+		self:Message(MSG["chat"]["id"], reply) -- "[" .. self:Name() .. "]: " ..
 			:ReplyTo( MSG:ID() )
-			:SetParseMode(parse_mode)
+			:SetParseMode( parse_mode )
 			:Send()
 	end
 
-	-- Обновляем таймер автоотключения
-	if !BOT_OBJ:IsModuleConnected("commands_auth") then return end
-	timer.Create("TLG.AutoDisconnect_" .. USER:ID(),60 * 30,1,function()
-		-- Еще не отключился сам
-		if BOT_OBJ:GetSession(USER) then
-			BOT_OBJ:Auth(USER,false)
-			BOT_OBJ:Message(USER,"Вы отключены от " .. BOT_OBJ:Name()):Send()
-		end
-	end)
+	hook.Run("TLG.OnCommand", self, MSG:Chat(), CMD, MSG, tArgs)
 end
 
-local function table_remove(tab,index)
-	local ntab = {}
 
-	for i = 1,#tab do
-		if i == index then continue end
 
-		ntab[#ntab + 1] = tab[i]
-	end
-
-	return ntab
-end
 
 
 -- Поиск и обработка команд
-hook.Add("OnBotMessage","Commands",function(self,MSG)
+--[[-------------------------------------------------------------------------
+ /abcdef 123
+ /qwer       123 ; ;    ;;;   ; ;
+ /hahaa qwe ewq  ;
+ /keklol heh mda
+---------------------------------------------------------------------------]]
+hook.Add("OnBotMessage","Commands",function(self, MSG)
 	if !self:GetCommands() then return end
 
-	-- EXAMPLE: /login@my_info_bot testasdfjhk asdf asd
-	if !MSG["text"] or MSG["text"][1] ~= "/" then return end -- если не команда
+	-- local CHAT = MSG:Chat()
+	local text = MSG.text
 
-	local USER = MSG:From()
-
-	-- Обработка нескольких команд в одном сообщении
-	local parts = string.Explode(";",MSG:Text())
-	for i = 1,math.Clamp(#parts,0,5) do -- ограничиваем для предотвращения абуза
-		parts[i] = parts[i]:Trim() -- /cmd;  ; /cmd"
-		if parts[i] == "" then continue end
-
-		local pieces = parts[i]:Split(" ")
-		local cmd = pieces[1]:Split("@")[1]:sub(2) -- /cmd@botname
-
-
-		local CMD = self:GetCommands()[cmd]
-		if CMD then
-			-- Игнорируем обработку, если нужен мастер сервер, а мы им не являемся
-			if self:IsModuleConnected("bot_extra") and CMD:ForMaster() and !self:IsMaster() then
-				return
-			end
-
-			-- Нужна авторизация, а мы не авторизированы
-			if self:IsModuleConnected("commands_auth") and !CMD:IsPublic() and !self:GetSession(USER) then
-				-- if self:IsMaster() then
-				-- 	self:Message(MSG:Chat(),"Вы не авторизированы. /login " .. self:Name()):Send()
-				-- end
-
-				return
-			end
-
-			--if !CMD:CheckPassword(value)
-
-			processCommand(self,CMD,MSG,USER, table_remove(pieces,1))
-
-		-- else
-		-- 	self:Message(MSG:Chat(),self:Name() .. " - команды " .. cmd .. " не существует"):Send()
+	if !MSG.entities then return end
+	function MSG.entities:getNextCmdEnt(last)
+		local next = last + 1
+		local next_ent = self[next]
+		if next_ent and next_ent.type ~= "bot_command" then
+			return self:getNextCmdEnt(next)
 		end
+
+		return next_ent
+	end
+
+	-- https://img.qweqwe.ovh/1528146795923.png
+	for i,ent in ipairs(MSG.entities) do
+		if ent.type ~= "bot_command" then continue end
+		if i > 10 then break end
+
+		local start = ent.offset + 2
+		local endd = start + ent.length - 2
+		local cmd = text:sub(start, endd):Split("@")[1]:lower() -- /CMD@botname > cmd
+
+		local next_ent = MSG.entities:getNextCmdEnt(i)
+
+		start = endd + 2
+		endd = next_ent and (next_ent.offset - 1) or nil
+
+		local argss_ = text:sub(start, endd)
+		if argss_ == "" then
+			argss_ = nil
+		end
+
+		self:ProcessCommand(MSG, cmd, argss_)
 	end
 end)
 
 
 
+
+
 -- Создаем объект обработчика входящих команд
--- Подробнее в command.lua
-function BOT:AddCommand(sCmd,fCallback)
+function BOT_MT:AddCommand(sCmd,fCallback)
 	if !self.commands then
 		self.commands = {}
 	end
@@ -224,10 +201,10 @@ function BOT:AddCommand(sCmd,fCallback)
 	return obj
 end
 
-function BOT:GetCommand(sCmd)
+function BOT_MT:GetCommand(sCmd)
 	return self.commands[sCmd]
 end
 
-function BOT:GetCommands()
+function BOT_MT:GetCommands()
 	return self.commands
 end

@@ -11,23 +11,17 @@ function TLG.LoadFolder(path)
 	end
 end
 
-local include   = TLG.Include
-local addFolder = TLG.LoadFolder
 
-include("dependencies/sv.lua")
-include("config.lua")
+TLG.Include("dependencies.lua")
 
-include("gluegram_core.lua")
+TLG.Include("core.lua")
 
-addFolder("objects")
-include("objects/custom/command.lua")
-include("objects/custom/bot.lua")
+TLG.LoadFolder("objects")
+TLG.LoadFolder("objects/custom")
 
-include("sv_methods.lua")
+TLG.LoadFolder("methods")
+TLG.LoadFolder("methods/objects")
 
-addFolder("methods")
-addFolder("listeners")
+TLG.LoadFolder("modules")
 
 LoadModules("gluegram/bots")
-
-hook.Call("onGluegramLoaded")
