@@ -99,14 +99,16 @@ function TLG.SendRequest(fCallback, token, method, params, cb_obj_)
 					tableToString(params)
 				})
 
-				return
+				-- return
 			end
 
-
 			if fCallback then
-				fCallback(cb_obj_ and TLG.SetMeta(dat.result,cb_obj_) or dat)
+				if dat.ok then
+					fCallback(cb_obj_ and TLG.SetMeta(dat.result,cb_obj_) or dat.result, dat)
+				else
+					fCallback(nil, dat.description, dat.error_code)
+				end
 			end
 		end
 	)
 end
-

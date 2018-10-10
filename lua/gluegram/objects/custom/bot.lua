@@ -67,6 +67,49 @@ function BOT_MT:HandleCBQ(fCallback,sUniqueName)
 end
 
 
+--[[-------------------------------------------------------------------------
+	Polling
+---------------------------------------------------------------------------]]
+function BOT_MT:Poll(cb)
+	local polling_offset = bib.get("tlg:" .. self:Name() .. ":polling_offset") -- may be nil
+
+	self:GetUpdates():SetOffset(polling_offset):Send(function(updList)
+		if cb then
+			cb(updList)
+		end
+
+		-- Апдейтов нет
+		if #updList == 0 then return end
+
+		for _,UPD in ipairs(updList) do
+			self:PushUpdate( TLG.SetMeta(UPD, "Update") )
+		end
+
+		local lastUPDid = updList[#updList].update_id
+		bib.set("tlg:" .. self:Name() .. ":polling_offset", lastUPDid + 1)
+		-- tlg:botname:polling_offset = 1337
+		-- print("lastUPDid", lastUPDid + 1)
+	end)
+end
+
+function BOT_MT:StartPolling(delay)
+	timer.Create("TLG.Polling." .. self:Name(), delay or 5, 0, function()
+		if self.busy then -- не завершился предыдущий запрос
+			ErrorNoHalt("[" .. self:Name() .. "] Some query already in process. Try to reduse polling delay\n")
+			return
+		end
+
+		self.busy = true
+		self:Poll(function()
+			self.busy = false
+		end)
+	end)
+end
+
+function BOT_MT:StopPolling()
+	timer.Remove("TLG.Polling." .. self:Name())
+end
+
 
 --[[-------------------------------------------------------------------------
 	Расширения

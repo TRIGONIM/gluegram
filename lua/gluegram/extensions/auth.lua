@@ -1,38 +1,4 @@
-local BOT_MT = TLG.GetObject("BOT")
-
-function BOT_MT:Auth(USER,bAuth)
-	self.sessions[USER:ID()] = bAuth and USER or nil -- не даем записать false. Лишняя память)
-end
-
--- Проверяется, если "not CMD:IsPublic()"
-function BOT_MT:GetSession(USER)
-	return self.sessions[USER:ID()]
-end
-
--- Функция будет выполняться после /login botname
-function BOT_MT:SetMotd(fMotd)
-	self.motd = fMotd
-	return self
-end
-
-
--- TODO Потом будет через БД с командами управления юзерами
--- -- /addaccess chat_id kosson, /removeaccess chat_id delta
-function BOT_MT:AddAccess(user_id)
-	assert(user_id,"user_id expected, got nil")
-	self.has_access[user_id] = true
-end
-
-function BOT_MT:HasAccess(user_id)
-	return self.has_access[user_id]
-end
-
-
-
-
-
-
-local CMD_MT = TLG.GetObject("COMMAND")
+local CMD_MT = TLG.GetObject("COMMAND") -- todo сделать локальное применение, а не всей метатаблице
 
 -- Может ли каждый желающий использовать команду
 -- Если не указано или false, то проверка на авторизованность (:IsPublic())
@@ -69,11 +35,44 @@ hook.Add("TLG.OnCommand","auth ext autodisconnect",function(BOT, CHAT)
 end)
 
 
-
 local BOT = BOTMOD
 if !BOT then return end -- lua refresh
 
 BOT.has_access = {}
+
+
+function BOT:Auth(USER,bAuth)
+	self.sessions[USER:ID()] = bAuth and USER or nil -- не даем записать false. Лишняя память)
+end
+
+-- Проверяется, если "not CMD:IsPublic()"
+function BOT:GetSession(USER)
+	return self.sessions[USER:ID()]
+end
+
+-- Функция будет выполняться после /login botname
+function BOT:SetMotd(fMotd)
+	self.motd = fMotd
+	return self
+end
+
+
+-- TODO Потом будет через БД с командами управления юзерами
+-- -- /addaccess chat_id kosson, /removeaccess chat_id delta
+function BOT:AddAccess(user_id)
+	assert(user_id,"user_id expected, got nil")
+	self.has_access[user_id] = true
+end
+
+function BOT:HasAccess(user_id)
+	return self.has_access[user_id]
+end
+
+
+
+
+
+
 
 
 -- login

@@ -19,6 +19,7 @@ TLG.Include("core.lua")
 TLG.LoadFolder("objects")
 TLG.LoadFolder("objects/custom")
 
+TLG.Include("methods.lua")
 TLG.LoadFolder("methods")
 TLG.LoadFolder("methods/objects")
 

@@ -1,23 +1,23 @@
-local INLINE_ANSWER = TLG.NewMethod("answerInlineQuery")
+local BOT_MT = TLG.GetMeta("BOT")
+local METHOD = TLG.NewMethod("answerInlineQuery")
 
 
-function INLINE_ANSWER:SetID(iID) -- !!!
+function METHOD:SetID(iID) -- !!!
 	return self:SetParam("inline_query_id",iID)
 end
 
-function INLINE_ANSWER:SetResults(tRes) -- !!!
+function METHOD:SetResults(tRes) -- !!!
 	return self:SetParam("results", util.TableToJSON(tRes))
 end
 
-function INLINE_ANSWER:SetCache(iSecTime, bPersonal)
+function METHOD:SetCache(iSecTime, bPersonal)
 	return self:SetParam("cache_time", iSecTime):SetParam("is_personal", tobool(bPersonal))
 end
 
 
 -- Создаем объект ответа
-local BOT_MT = TLG.GetMeta("BOT")
 function BOT_MT:InlineAnswer(iID, tRes)
-	return self:Request(INLINE_ANSWER)
+	return self:Request(METHOD)
 		:SetID(iID)
 		:SetResults(tRes)
 end

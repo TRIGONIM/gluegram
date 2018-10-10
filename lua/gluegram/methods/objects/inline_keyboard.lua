@@ -36,6 +36,7 @@ function IKBB:SetCallBackData(tData)
 	self.callback_data = pon.encode(tData)
 	return self
 end
+IKBB.SetData = IKBB.SetCallBackData
 
 function IKB:Button(sText)
 	return setmetatable({

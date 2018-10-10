@@ -42,6 +42,15 @@ function TLG.Print(msg)
 	MsgC(GREEN,"[",WHITE,"TLG",GREEN,"] ", GRAY,msg .. "\n")
 end
 
+-- Helper function to escape telegram markdown chars
+local esc_chars = "_`*["
+function TLG.EscapeMarkdown(text)
+	return text:gsub("[" .. esc_chars .. "]",function(s)
+		return "\\" .. s
+	end)
+end
+-- print( TLG.EscapeMarkdown("[abc](https://google.com) _italic_ `monow` *bold*") )
+
 
 --[[-------------------------------------------------------------------------
 	BOTS

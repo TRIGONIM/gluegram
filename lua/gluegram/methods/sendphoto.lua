@@ -1,6 +1,7 @@
 -- https://core.telegram.org/bots/api#sendphoto
 -- https://core.telegram.org/bots/api#sending-files
 
+local BOT_MT = TLG.GetObject("BOT")
 local METHOD = TLG.NewMethod("sendPhoto")
 
 -- 0-200 characters
@@ -13,7 +14,7 @@ end
 -- reply_to_message_id
 -- reply_markup
 
-local BOT_MT = TLG.GetObject("BOT")
+
 function BOT_MT:Photo(chat_id, photo) -- photo is an URL or existing ID on tlg servers
 	return self:Request(METHOD, "Message")
 		:SetParam("chat_id", chat_id)
