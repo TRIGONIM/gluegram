@@ -15,9 +15,17 @@ end
 
 
 hook.Add("TLG.CanRunCommand","auth ext",function(BOT, USER, CMD, _)
-	-- Нужна авторизация, а мы не авторизированы
-	if BOT:IsExtensionConnected("auth") and !CMD:IsPublic() and !BOT:GetSession(USER) then
-		return false
+	if !BOT:IsExtensionConnected("auth") then return end
+
+	if CMD:IsPublic() then return end
+
+	-- Не авторизированы
+	if !BOT:GetSession(USER) then return false end
+
+	-- Не авторизированы или не имеем доступа к боту
+	-- #TODO ограничить команды вместо целого бота
+	if !BOT:HasAccess(USER:ID()) then
+		return false, "Access denied"
 	end
 end)
 
@@ -36,7 +44,7 @@ end)
 
 
 local BOT = BOTMOD
-if !BOT then return end -- lua refresh
+if !BOT then return end -- lua refresh (Сделать бы как в SWEP, ENT и TOOL #todo)
 
 BOT.has_access = {}
 
@@ -45,20 +53,11 @@ function BOT:Auth(USER,bAuth)
 	self.sessions[USER:ID()] = bAuth and USER or nil -- не даем записать false. Лишняя память)
 end
 
--- Проверяется, если "not CMD:IsPublic()"
 function BOT:GetSession(USER)
 	return self.sessions[USER:ID()]
 end
 
--- Функция будет выполняться после /login botname
-function BOT:SetMotd(fMotd)
-	self.motd = fMotd
-	return self
-end
 
-
--- TODO Потом будет через БД с командами управления юзерами
--- -- /addaccess chat_id kosson, /removeaccess chat_id delta
 function BOT:AddAccess(user_id)
 	assert(user_id,"user_id expected, got nil")
 	self.has_access[user_id] = true
@@ -71,26 +70,11 @@ end
 
 
 
-
-
-
-
 -- login
 BOT("login",function(MSG,args)
-	if !BOT:HasAccess(MSG:From():ID()) then return "Access denied" end
-
-	if !args[1] and (!BOT.IsMaster or BOT:IsMaster()) then -- если не подключен экстра модуль (.IsMaster)
-		return "Нужно ввести кодовое название бота, к которому хотите подключиться. Пример: /login " .. BOT:Name()
-
-	-- Не мастер сервере, но не введен сервер
-	elseif !args[1] then
-		return
-	end
-
-	--                                  \/ /login *, /login ser*er
-	if args[1] == BOT:Name() or string.find(BOT:Name(),args[1]) or args[1] == "*" then
+	if !args[1] or string.find(BOT:Name(), args[1]) then
 		BOT:Auth(MSG:From(),true)
-		return "подключен." .. (BOT.motd and ("\n\nMOTD:\n" .. BOT.motd()) or "")
+		return BOT:Name() .. " подключен."
 	end
 end):SetPublic(true)
 
@@ -98,8 +82,8 @@ end):SetPublic(true)
 
 -- exit
 BOT("exit",function(MSG,args)
-	if BOT:GetSession(MSG:From()) and ( !args[1] or args[1] == BOT:Name() or string.find(BOT:Name(),args[1]) ) then
+	if BOT:GetSession(MSG:From()) and ( !args[1] or string.find(BOT:Name(),args[1]) ) then
 		BOT:Auth(MSG:From(),false)
-		return "отключились. Бай-бай"
+		return "Отключились от " .. BOT:Name() .. ". Бай-бай"
 	end
 end):SetPublic(true)

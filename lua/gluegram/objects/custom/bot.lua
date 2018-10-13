@@ -70,10 +70,17 @@ end
 --[[-------------------------------------------------------------------------
 	Polling
 ---------------------------------------------------------------------------]]
-function BOT_MT:Poll(cb)
-	local polling_offset = bib.get("tlg:" .. self:Name() .. ":polling_offset") -- may be nil
+file.CreateDir("gluegram/updates")
+local function writeOffset(name, i) file.Write("gluegram/updates/" .. name .. ".dat",i) end
+local function readOffset(name) return tonumber( file.Read("gluegram/updates/" .. name .. ".dat") or nil ) end
+-- writeOffset("name foo bar", 3)
+-- print( readOffset("name foo bar") )
 
-	self:GetUpdates():SetOffset(polling_offset):Send(function(updList)
+function BOT_MT:Poll(cb)
+	local polling_offset = readOffset(self:Name()) -- may be nil
+	-- print("polling_offset", polling_offset)
+
+	self:GetUpdates():SetOffset( polling_offset ):Send(function(updList)
 		if cb then
 			cb(updList)
 		end
@@ -86,9 +93,7 @@ function BOT_MT:Poll(cb)
 		end
 
 		local lastUPDid = updList[#updList].update_id
-		bib.set("tlg:" .. self:Name() .. ":polling_offset", lastUPDid + 1)
-		-- tlg:botname:polling_offset = 1337
-		-- print("lastUPDid", lastUPDid + 1)
+		writeOffset(self:Name(), lastUPDid + 1)
 	end)
 end
 
@@ -146,7 +151,12 @@ function BOT_MT:ProcessCommand(MSG, cmd, argss_)
 	local CMD = self:GetCommands()[cmd]
 	if !CMD then return end
 
-	if hook.Run("TLG.CanRunCommand", self, MSG:From(), CMD, MSG) == false then
+	local access,err = hook.Run("TLG.CanRunCommand", self, MSG:From(), CMD, MSG)
+	if access == false then
+		if err then
+			self:Message(MSG["chat"]["id"], err):ReplyTo( MSG:ID() ):Send()
+		end
+
 		return
 	end
 

@@ -6,7 +6,7 @@ local METHOD = TLG.NewMethod("sendPhoto")
 
 -- 0-200 characters
 function METHOD:SetCaption(s)
-	return self:SetParam("caption", s)
+	return self:SetParam("caption", (string.utf8sub or string.sub)(s, 1,200))
 end
 
 -- parse_mode

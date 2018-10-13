@@ -8,7 +8,7 @@ function MEDIA_MT:AddPhoto(photo, caption, parse_mode)
 	table.insert(self,{
 		type = "photo",
 		media = photo, -- url or tlg id
-		caption = caption, -- 0-200 chars
+		caption = (string.utf8sub or string.sub)(caption, 1,200),
 		parse_mode = parse_mode, -- html, markdown
 	})
 end

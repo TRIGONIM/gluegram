@@ -46,6 +46,9 @@ function BOT:SendPasswordKeyboard(cb, chat_id, password)
 		:Send()
 end
 
+local function count_digits(i)
+	return math.Truncate( math.log10(i) ) + 1
+end
 
 BOT:HandleCBQ(function(CBQ)
 	local dat = CBQ:Data() -- [1] = 0-9, cmd = 1/2
@@ -83,7 +86,7 @@ BOT:HandleCBQ(function(CBQ)
 	end
 
 	local IKB = buildKeyboard()
-	BOT:EditMessage(MSG, KB[2] == 0 and "Enter password" or string.rep("⏺", math.digits(KB[2])))
+	BOT:EditMessage(MSG, KB[2] == 0 and "Enter password" or string.rep("⏺", count_digits(KB[2])))
 		:SetReplyMarkup(IKB)
 		:Send()
 end, "password_keyboard_" .. BOT:Name())

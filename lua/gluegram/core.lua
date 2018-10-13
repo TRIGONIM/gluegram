@@ -21,7 +21,7 @@ setmetatable(TLG, {
 function TLG.LogError(err)
 	local sErr = isstring(err) and err
 	if !sErr then
-		sErr = "==== " .. TL.getDatetime() .. " ===="
+		sErr = "==== " .. os.date("%Y-%m-%d %H:%M:%S") .. " ===="
 		for typ,val in pairs(err) do
 			sErr = sErr .. "\n" .. typ .. ": " .. val
 		end
@@ -31,7 +31,8 @@ function TLG.LogError(err)
 	end
 
 	print("\n\n\n" .. sErr)
-	file.Append("telegram_errors.txt",sErr)
+	file.Append("gluegram/telegram_errors.txt",sErr)
+	-- debug.Trace()
 end
 
 
