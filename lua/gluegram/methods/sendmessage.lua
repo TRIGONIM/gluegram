@@ -37,5 +37,9 @@ function BOT_MT:Message(iTo, sText)
 		:SetText(sText)
 end
 
+-- function BOT_MT:SendMarkdown(iTo, sText)
+-- 	self:Message(iTo, sText):SetParseMode("markdown"):Send()
+-- end
+
 -- local markdown = "*bold*; _italic_; [url](google.com); ```lua\nprint('hello world')\n```"
 -- TLG_CORE_BOT:Message(TLG_AMD, markdown):SetParseMode("markdown"):Send(prt)
