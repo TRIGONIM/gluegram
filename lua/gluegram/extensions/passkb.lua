@@ -8,24 +8,24 @@ BOT.PK = BOT.PK or { -- password keyboard
 local function buildKeyboard()
 	local IKB = TLG.InlineKeyboard()
 	IKB:Line(
-		IKB:Button("1"):SetCallBackData({1,pkb = 1}),
-		IKB:Button("2"):SetCallBackData({2,pkb = 1}),
-		IKB:Button("3"):SetCallBackData({3,pkb = 1})
+		IKB:Button("1"):SetData({1,pkb = 1}),
+		IKB:Button("2"):SetData({2,pkb = 1}),
+		IKB:Button("3"):SetData({3,pkb = 1})
 	)
 	IKB:Line(
-		IKB:Button("4"):SetCallBackData({4,pkb = 1}),
-		IKB:Button("5"):SetCallBackData({5,pkb = 1}),
-		IKB:Button("6"):SetCallBackData({6,pkb = 1})
+		IKB:Button("4"):SetData({4,pkb = 1}),
+		IKB:Button("5"):SetData({5,pkb = 1}),
+		IKB:Button("6"):SetData({6,pkb = 1})
 	)
 	IKB:Line(
-		IKB:Button("7"):SetCallBackData({7,pkb = 1}),
-		IKB:Button("8"):SetCallBackData({8,pkb = 1}),
-		IKB:Button("9"):SetCallBackData({9,pkb = 1})
+		IKB:Button("7"):SetData({7,pkb = 1}),
+		IKB:Button("8"):SetData({8,pkb = 1}),
+		IKB:Button("9"):SetData({9,pkb = 1})
 	)
 	IKB:Line(
-		IKB:Button("❌"):SetCallBackData({cmd = 1,pkb = 1}),
-		IKB:Button("0") :SetCallBackData({0,pkb = 1}),
-		IKB:Button("✅"):SetCallBackData({cmd = 2,pkb = 1})
+		IKB:Button("❌"):SetData({cmd = 1,pkb = 1}),
+		IKB:Button("0") :SetData({0,pkb = 1}),
+		IKB:Button("✅"):SetData({cmd = 2,pkb = 1})
 	)
 
 	return IKB

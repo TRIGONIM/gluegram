@@ -1,3 +1,5 @@
+-- https://core.telegram.org/bots/api#sendmessage
+
 local BOT_MT = TLG.GetMeta("BOT")
 local METHOD = TLG.NewMethod("sendMessage")
 
@@ -20,11 +22,22 @@ function METHOD:ReplyTo(iReplyToMessageId)
 end
 
 -- InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardHide or ForceReply
--- https://tlgrm.ru/docs/bots/api#sendmessage
 function METHOD:SetReplyMarkup(objMarkup)
 	return self:SetParam("reply_markup", util.TableToJSON(objMarkup))
 end
 
+function METHOD:DisablePreview(bDisable)
+	return self:SetParam("disable_web_page_preview", bDisable ~= false)
+end
+
+function METHOD:DisableNotification(bDisable)
+	return self:SetParam("disable_notification", bDisable ~= false)
+end
+
+-- шаблон
+function TLG.Message(BOT)
+	return BOT:Request(METHOD, "Message")
+end
 
 -- Создаем объект сообщения
 function BOT_MT:Message(iTo, sText)
@@ -32,10 +45,12 @@ function BOT_MT:Message(iTo, sText)
 		iTo = iTo["id"]
 	end
 
-	return self:Request(METHOD, "Message")
+	return TLG.Message(self)
 		:SetChatID(iTo)
 		:SetText(sText)
 end
+
+
 
 -- function BOT_MT:SendMarkdown(iTo, sText)
 -- 	self:Message(iTo, sText):SetParseMode("markdown"):Send()

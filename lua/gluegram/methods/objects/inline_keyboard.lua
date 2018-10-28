@@ -32,11 +32,10 @@ function IKBB:SetURL(sUrl)
 end
 
 -- https://tlgrm.ru/docs/bots/api#callbackquery
-function IKBB:SetCallBackData(tData)
+function IKBB:SetData(tData)
 	self.callback_data = pon.encode(tData)
 	return self
 end
-IKBB.SetData = IKBB.SetCallBackData
 
 function IKB:Button(sText)
 	return setmetatable({

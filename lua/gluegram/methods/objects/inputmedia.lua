@@ -5,10 +5,14 @@ local MEDIA_MT = {}
 MEDIA_MT.__index = MEDIA_MT
 
 function MEDIA_MT:AddPhoto(photo, caption, parse_mode)
+	if caption then
+		caption = (string.utf8sub or string.sub)(caption, 1,200)
+	end
+
 	table.insert(self,{
 		type = "photo",
 		media = photo, -- url or tlg id
-		caption = (string.utf8sub or string.sub)(caption, 1,200),
+		caption = caption,
 		parse_mode = parse_mode, -- html, markdown
 	})
 end

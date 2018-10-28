@@ -1,12 +1,5 @@
---[[-------------------------------------------------------------------------
-	TODO TODO TODO
-	• CMD:AddPassword()
-	• Замена TLG.notifyGroup везде
-	• То же самое касается хэндлеров команд и нажатий кнопок, к примеру
----------------------------------------------------------------------------]]
-TLG.BOTS      = TLG.BOTS      or {}
-TLG.OBJECTS   = TLG.OBJECTS   or {}
-
+TLG.BOTS    = TLG.BOTS    or {}
+TLG.OBJECTS = TLG.OBJECTS or {}
 
 setmetatable(TLG, {
 	__call = function(self,...)
@@ -60,8 +53,6 @@ function TLG.NewBot(sToken,sName)
 	-- if TLG.BOTS[sName] then return TLG.BOTS[sName] end -- закомментить, если надо изменить метафункцию
 
 	local OBJ = setmetatable(TLG.BOTS[sName] or {
-		sessions = {}, -- авторизированные пользователи
-
 		token = sToken,
 		name  = sName,
 	}, TLG.GetMeta("BOT"))

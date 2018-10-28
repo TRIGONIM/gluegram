@@ -11,6 +11,10 @@ function USER:ID()
 	return self.id
 end
 
+function USER:Name()
+	return tostring(self)
+end
+
 -- !! string
 function USER:FName()
 	return self.first_name

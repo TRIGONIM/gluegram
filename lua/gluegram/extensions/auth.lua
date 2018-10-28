@@ -1,43 +1,44 @@
-local CMD_MT = TLG.GetObject("COMMAND") -- todo сделать локальное применение, а не всей метатаблице
+--[[-------------------------------------------------------------------------
+	TODO избавиться от подключаемых extensions
+	Такой функционал должен подключаться к каждому боту по отдельности как к энтити
+---------------------------------------------------------------------------]]
 
--- Может ли каждый желающий использовать команду
--- Если не указано или false, то проверка на авторизованность (:IsPublic())
--- происходит в objects/custom/bot.lua
-function CMD_MT:SetPublic(bPublic)
-	self.public = bPublic
+
+local CMD_MT = TLG.GetObject("COMMAND")
+
+function CMD_MT:SetNeedAuth(b) -- требовать /login
+	self.need_auth = b ~= false
 	return self
 end
 
-function CMD_MT:IsPublic()
-	return self.public
-end
 
 
 
-hook.Add("TLG.CanRunCommand","auth ext",function(BOT, USER, CMD, _)
+
+hook.Add("TLG.CanRunCommand","auth_ext",function(BOT, USER, CMD, _)
 	if !BOT:IsExtensionConnected("auth") then return end
 
-	if CMD:IsPublic() then return end
-
-	-- Не авторизированы
-	if !BOT:GetSession(USER) then return false end
+	-- Не авторизированы, а команда требует
+	if CMD.need_auth and !BOT:GetSession( USER ) then return false end
 
 	-- Не авторизированы или не имеем доступа к боту
 	-- #TODO ограничить команды вместо целого бота
-	if !BOT:HasAccess(USER:ID()) then
-		return false, "Access denied"
-	end
+	-- if !BOT:HasAccess(USER:ID()) then
+	-- 	return false, "Access denied"
+	-- end
 end)
 
-hook.Add("TLG.OnCommand","auth ext autodisconnect",function(BOT, CHAT)
+hook.Add("TLG.OnCommand","auth_ext_autodisconnect",function(BOT, _, _, MSG)
 	if !BOT:IsExtensionConnected("auth") then return end
 
+	local USER = MSG:From()
+
 	-- Обновляем таймер автоотключения
-	timer.Create("TLG.AutoDisconnect_" .. CHAT:ID(),60 * 30,1,function()
+	timer.Create("TLG.AutoDisconnect_" .. USER:ID(),60 * 30,1,function()
 		-- Еще не отключился сам
-		if BOT:GetSession(CHAT) then
-			BOT:Auth(CHAT,false)
-			BOT:Message(CHAT,"Вы отключены от " .. BOT:Name()):Send()
+		if BOT:GetSession(USER) then
+			BOT:Auth(USER, false)
+			BOT:Message(USER:ID(), "Disconnected from " .. BOT:Name() .. " because of timeout"):Send()
 		end
 	end)
 end)
@@ -49,24 +50,14 @@ if !BOT then return end -- lua refresh (Сделать бы как в SWEP, ENT 
 BOT.has_access = {}
 
 
-function BOT:Auth(USER,bAuth)
-	self.sessions[USER:ID()] = bAuth and USER or nil -- не даем записать false. Лишняя память)
+function BOT:Auth(USER, bAuth) -- не чат, а юзер, чтобы в чатах случайно не дать доступ всем
+	self.sessions = self.sessions or {}
+	self.sessions[USER:ID()] = bAuth and USER or nil
 end
 
 function BOT:GetSession(USER)
-	return self.sessions[USER:ID()]
+	return self.sessions and self.sessions[USER:ID()]
 end
-
-
-function BOT:AddAccess(user_id)
-	assert(user_id,"user_id expected, got nil")
-	self.has_access[user_id] = true
-end
-
-function BOT:HasAccess(user_id)
-	return self.has_access[user_id]
-end
-
 
 
 
@@ -74,16 +65,15 @@ end
 BOT("login",function(MSG,args)
 	if !args[1] or string.find(BOT:Name(), args[1]) then
 		BOT:Auth(MSG:From(),true)
-		return BOT:Name() .. " подключен."
+		return "Connected!\nType /exit " .. BOT:Name() .. " for disconnect"
 	end
-end):SetPublic(true)
-
+end)
 
 
 -- exit
 BOT("exit",function(MSG,args)
 	if BOT:GetSession(MSG:From()) and ( !args[1] or string.find(BOT:Name(),args[1]) ) then
 		BOT:Auth(MSG:From(),false)
-		return "Отключились от " .. BOT:Name() .. ". Бай-бай"
+		return "Disconnected from " .. BOT:Name() .. ". Bye!"
 	end
-end):SetPublic(true)
+end)

@@ -104,7 +104,7 @@ function TLG.SendRequest(fCallback, token, method, params, cb_obj_)
 
 			if fCallback then
 				if dat.ok then
-					fCallback(cb_obj_ and TLG.SetMeta(dat.result,cb_obj_) or dat.result, dat)
+					fCallback(cb_obj_ and TLG.SetMeta(dat.result,cb_obj_) or dat.result)
 				else
 					fCallback(nil, dat.description, dat.error_code)
 				end
