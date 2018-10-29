@@ -1,5 +1,5 @@
 local BOT = BOTMOD
-if !BOT then return end -- refresh
+if not BOT then return end -- refresh
 
 BOT.PK = BOT.PK or { -- password keyboard
 	MAP = {}
@@ -52,14 +52,14 @@ end
 
 BOT:HandleCBQ(function(CBQ)
 	local dat = CBQ:Data() -- [1] = 0-9, cmd = 1/2
-	if !dat.pkb then return end
+	if not dat.pkb then return end
 
 	local MSG = CBQ:Message()
 	local chat_id = MSG:Chat():ID()
 
 
 	local KB = BOT.PK.MAP[chat_id]
-	if !KB then
+	if not KB then
 		-- сервер перезагрузился и кто-то трогает старую клаву
 		BOT:Message(chat_id, "This keyboard was removed"):ReplyTo(MSG:ID()):Send()
 		return

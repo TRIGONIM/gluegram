@@ -14,7 +14,7 @@ function TLG.LoadFolder(path, iDeep, fFilter) -- recoursive deeping
 	local files,dirs = file.Find("gluegram/" .. path .. "/*","LUA")
 	for _,f in ipairs(files) do
 		-- print("f", iDeep, f)
-		if !fFilter or fFilter(f) then
+		if not fFilter or fFilter(f) then
 			TLG.Include(path .. "/" .. f)
 		end
 	end

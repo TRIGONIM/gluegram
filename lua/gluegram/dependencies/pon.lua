@@ -1,4 +1,4 @@
-if !(pon or pcall(require,"pon")) then
+if not (pon or pcall(require,"pon")) then
 	MsgN("[GlueGram] For using buttons need 'pon' (included)")
 	MsgN("https://github.com/SuperiorServers/dash/tree/master/lua/dash/thirdparty/pon")
 end

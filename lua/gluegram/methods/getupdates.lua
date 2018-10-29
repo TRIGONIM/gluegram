@@ -1,5 +1,5 @@
 -- https://core.telegram.org/bots/api#getupdates
-local BOT_MT = TLG.GetObject("BOT")
+local BOT_MT = TLG.GetMeta("BOT")
 local METHOD = TLG.NewMethod("getUpdates")
 
 -- allowed_updates

@@ -1,5 +1,5 @@
 -- https://core.telegram.org/bots/api#editMessageLiveLocation
-local BOT_MT = TLG.GetObject("BOT")
+local BOT_MT = TLG.GetMeta("BOT")
 local METHOD = TLG.NewMethod("editMessageLiveLocation")
 
 function METHOD:ByMessage(chat_id, message_id)
@@ -10,7 +10,6 @@ end
 -- inline_message_id, reply_markup
 function BOT_MT:UpdateLocation(latitude, longitude)
 	return self:Request(METHOD)
-		:SetParam("chat_id", chat_id)
 		:SetParam("latitude", latitude)
 		:SetParam("longitude", longitude)
 end

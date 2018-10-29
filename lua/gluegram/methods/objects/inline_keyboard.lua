@@ -1,11 +1,11 @@
-/*
+--[[-------------------------------------------------------------------------
 local IKB = TLG.InlineKeyboard()
 IKB:Line(
 	IKB:Button("Text 1"):SetURL("https://vk.com"), -- first button in the line
 	IKB:Button("Text 2"):SetURL("https://vk.com") -- second ..
 )
 MESSAGE:SetReplyMarkup(IKB)
-*/
+---------------------------------------------------------------------------]]
 
 local IKB  = {} -- InlineKeyBoard
 IKB.__index  = IKB

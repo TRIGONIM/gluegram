@@ -1,5 +1,4 @@
-TLG.BOTS    = TLG.BOTS    or {}
-TLG.OBJECTS = TLG.OBJECTS or {}
+TLG.BOTS = TLG.BOTS or {}
 
 setmetatable(TLG, {
 	__call = function(self,...)
@@ -13,7 +12,7 @@ setmetatable(TLG, {
 ---------------------------------------------------------------------------]]
 function TLG.LogError(err)
 	local sErr = isstring(err) and err
-	if !sErr then
+	if not sErr then
 		sErr = "==== " .. os.date("%Y-%m-%d %H:%M:%S") .. " ===="
 		for typ,val in pairs(err) do
 			sErr = sErr .. "\n" .. typ .. ": " .. val
@@ -53,6 +52,8 @@ function TLG.NewBot(sToken,sName)
 	-- if TLG.BOTS[sName] then return TLG.BOTS[sName] end -- закомментить, если надо изменить метафункцию
 
 	local OBJ = setmetatable(TLG.BOTS[sName] or {
+		commands = {},
+
 		token = sToken,
 		name  = sName,
 	}, TLG.GetMeta("BOT"))
@@ -72,17 +73,8 @@ end
 --[[-------------------------------------------------------------------------
 	OBJECTS
 ---------------------------------------------------------------------------]]
-function TLG.AddObject(uid, tInf)
-	TLG.OBJECTS[uid] = tInf
-end
-
--- uid это название объекта, как указано в документации
-function TLG.GetObject(uid)
-	return TLG.OBJECTS[uid]
-end
-
 function TLG.SetMeta(tab, uid)
-	return setmetatable(tab, TLG.GetObject(uid))
+	return setmetatable(tab, TLG.GetMeta(uid))
 end
 
 function TLG.GetMeta(uid)
@@ -90,16 +82,14 @@ function TLG.GetMeta(uid)
 end
 
 function TLG.NewObjectBase(uid)
-	if TLG.GetObject(uid) then
-		return TLG.GetObject(uid)
+	if TLG.GetMeta(uid) then
+		return TLG.GetMeta(uid)
 	end
 
 	local OBJ = {}
 	OBJ.__index = OBJ
 
 	debug.getregistry()["TLG." .. uid] = OBJ
-
-	TLG.AddObject(uid,OBJ)
 
 	return OBJ
 end

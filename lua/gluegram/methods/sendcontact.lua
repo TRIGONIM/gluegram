@@ -1,5 +1,5 @@
 -- https://core.telegram.org/bots/api#sendcontact
-local BOT_MT = TLG.GetObject("BOT")
+local BOT_MT = TLG.GetMeta("BOT")
 local METHOD = TLG.NewMethod("sendContact")
 
 function METHOD:SetName(first, last)

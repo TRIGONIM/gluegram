@@ -1,7 +1,7 @@
 -- https://core.telegram.org/bots/api#sendphoto
 -- https://core.telegram.org/bots/api#sending-files
 
-local BOT_MT = TLG.GetObject("BOT")
+local BOT_MT = TLG.GetMeta("BOT")
 local METHOD = TLG.NewMethod("sendPhoto")
 
 -- 0-200 characters

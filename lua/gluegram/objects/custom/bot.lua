@@ -149,7 +149,7 @@ end
 ---------------------------------------------------------------------------]]
 function BOT_MT:ProcessCommand(MSG, cmd, argss_)
 	local CMD = self:GetCommands()[cmd]
-	if !CMD then return end
+	if not CMD then return end
 
 	local access,err = hook.Run("TLG.CanRunCommand", self, MSG:From(), CMD, MSG)
 	if access == false then
@@ -163,8 +163,9 @@ function BOT_MT:ProcessCommand(MSG, cmd, argss_)
 	local tArgs = {}
 	if argss_ then
 		for _,arg in ipairs( string.Explode(" ", argss_) ) do
-			if arg == "" then continue end
-			tArgs[#tArgs + 1] = arg
+			if arg ~= "" then
+				tArgs[#tArgs + 1] = arg
+			end
 		end
 	end
 
@@ -190,13 +191,11 @@ end
  /hahaa qwe ewq  ;
  /keklol heh mda
 ---------------------------------------------------------------------------]]
-hook.Add("OnBotMessage","Commands",function(self, MSG)
-	if !self:GetCommands() then return end
-
+hook.Add("OnBotMessage","Commands",function(BOT, MSG)
 	-- local CHAT = MSG:Chat()
 	local text = MSG.text
 
-	if !MSG.entities then return end
+	if not MSG.entities then return end
 	function MSG.entities:getNextCmdEnt(last)
 		local next = last + 1
 		local next_ent = self[next]
@@ -209,24 +208,25 @@ hook.Add("OnBotMessage","Commands",function(self, MSG)
 
 	-- https://img.qweqwe.ovh/1528146795923.png
 	for i,ent in ipairs(MSG.entities) do
-		if ent.type ~= "bot_command" then continue end
-		if i > 10 then break end
+		if ent.type == "bot_command" then
+			if i > 10 then break end
 
-		local start = ent.offset + 2
-		local endd = start + ent.length - 2
-		local cmd = text:sub(start, endd):Split("@")[1]:lower() -- /CMD@botname > cmd
+			local start = ent.offset + 2
+			local endd = start + ent.length - 2
+			local cmd = text:sub(start, endd):Split("@")[1]:lower() -- /CMD@botname > cmd
 
-		local next_ent = MSG.entities:getNextCmdEnt(i)
+			local next_ent = MSG.entities:getNextCmdEnt(i)
 
-		start = endd + 2
-		endd = next_ent and (next_ent.offset - 1) or nil
+			start = endd + 2
+			endd = next_ent and (next_ent.offset - 1) or nil
 
-		local argss_ = text:sub(start, endd)
-		if argss_ == "" then
-			argss_ = nil
+			local argss_ = text:sub(start, endd)
+			if argss_ == "" then
+				argss_ = nil
+			end
+
+			BOT:ProcessCommand(MSG, cmd, argss_)
 		end
-
-		self:ProcessCommand(MSG, cmd, argss_)
 	end
 end)
 
@@ -236,10 +236,6 @@ end)
 
 -- Создаем объект обработчика входящих команд
 function BOT_MT:AddCommand(sCmd,fCallback)
-	if !self.commands then
-		self.commands = {}
-	end
-
 	sCmd = string.lower(sCmd)
 
 	local obj = TLG.SetMeta({

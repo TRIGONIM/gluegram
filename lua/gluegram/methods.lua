@@ -52,7 +52,7 @@ end
 
 -- local CHAT = TLG.NewMethod("getChat")
 
--- local BOT_MT = TLG.GetObject("BOT")
+-- local BOT_MT = TLG.GetMeta("BOT")
 -- function BOT_MT:Request(METH, cb_typ)
 -- 	return TLG.Request(METH):SetToken( self:GetToken() ):SetCallbackType(cb_typ)
 -- end
@@ -91,7 +91,7 @@ function TLG.SendRequest(fCallback, token, method, params, cb_obj_)
 		"https://api.telegram.org/bot" .. token .. "/" .. method, params,function(dat)
 			dat = assert(util.JSONToTable(dat), "Телега прислала мусор: " .. tostring(dat))
 
-			if !dat.ok then
+			if not dat.ok then
 				TLG.LogError({
 					dat.error_code,
 					dat.description,

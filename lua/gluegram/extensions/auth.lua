@@ -4,7 +4,7 @@
 ---------------------------------------------------------------------------]]
 
 
-local CMD_MT = TLG.GetObject("COMMAND")
+local CMD_MT = TLG.GetMeta("COMMAND")
 
 function CMD_MT:SetNeedAuth(b) -- требовать /login
 	self.need_auth = b ~= false
@@ -16,10 +16,10 @@ end
 
 
 hook.Add("TLG.CanRunCommand","auth_ext",function(BOT, USER, CMD, _)
-	if !BOT:IsExtensionConnected("auth") then return end
+	if not BOT:IsExtensionConnected("auth") then return end
 
 	-- Не авторизированы, а команда требует
-	if CMD.need_auth and !BOT:GetSession( USER ) then return false end
+	if CMD.need_auth and not BOT:GetSession( USER ) then return false end
 
 	-- Не авторизированы или не имеем доступа к боту
 	-- #TODO ограничить команды вместо целого бота
@@ -29,7 +29,7 @@ hook.Add("TLG.CanRunCommand","auth_ext",function(BOT, USER, CMD, _)
 end)
 
 hook.Add("TLG.OnCommand","auth_ext_autodisconnect",function(BOT, _, _, MSG)
-	if !BOT:IsExtensionConnected("auth") then return end
+	if not BOT:IsExtensionConnected("auth") then return end
 
 	local USER = MSG:From()
 
@@ -45,7 +45,7 @@ end)
 
 
 local BOT = BOTMOD
-if !BOT then return end -- lua refresh (Сделать бы как в SWEP, ENT и TOOL #todo)
+if not BOT then return end -- lua refresh (Сделать бы как в SWEP, ENT и TOOL #todo)
 
 BOT.has_access = {}
 
@@ -63,7 +63,7 @@ end
 
 -- login
 BOT("login",function(MSG,args)
-	if !args[1] or string.find(BOT:Name(), args[1]) then
+	if not args[1] or string.find(BOT:Name(), args[1]) then
 		BOT:Auth(MSG:From(),true)
 		return "Connected!\nType /exit " .. BOT:Name() .. " for disconnect"
 	end
@@ -72,7 +72,7 @@ end)
 
 -- exit
 BOT("exit",function(MSG,args)
-	if BOT:GetSession(MSG:From()) and ( !args[1] or string.find(BOT:Name(),args[1]) ) then
+	if BOT:GetSession(MSG:From()) and ( not args[1] or string.find(BOT:Name(),args[1]) ) then
 		BOT:Auth(MSG:From(),false)
 		return "Disconnected from " .. BOT:Name() .. ". Bye!"
 	end
