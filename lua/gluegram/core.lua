@@ -1,8 +1,8 @@
 TLG.BOTS = TLG.BOTS or {}
 
 setmetatable(TLG, {
-	__call = function(self,...)
-		return self.NewBot(...)
+	__call = function(self, ...)
+		return self.CreateBot(...)
 	end
 })
 
@@ -28,13 +28,6 @@ function TLG.LogError(err)
 end
 
 
-local GREEN = Color(50,200,50)
-local WHITE = Color(245,245,245)
-local GRAY  = Color(200,200,200)
-function TLG.Print(msg)
-	MsgC(GREEN,"[",WHITE,"TLG",GREEN,"] ", GRAY,msg .. "\n")
-end
-
 -- Helper function to escape telegram markdown chars
 local esc_chars = "_`*["
 function TLG.EscapeMarkdown(text)
@@ -48,19 +41,31 @@ end
 --[[-------------------------------------------------------------------------
 	BOTS
 ---------------------------------------------------------------------------]]
-function TLG.NewBot(sToken,sName)
-	-- if TLG.BOTS[sName] then return TLG.BOTS[sName] end -- закомментить, если надо изменить метафункцию
+-- Регает полноценного бота, которого можно
+-- использовать как базу или как отдельную единицу
+function TLG.NewBot(class, base_class)
+	assert(!base_class or TLG.BOTS[base_class], "Attempt to inherit non existent bot class: " .. tostring(base_class))
 
-	local OBJ = setmetatable(TLG.BOTS[sName] or {
-		commands = {},
+	TLG.BOTS[class] = TLG.BOTS[class] or {class = class}
+	local BOT = TLG.BOTS[class]
 
-		token = sToken,
-		name  = sName,
-	}, TLG.GetMeta("BOT"))
+	if base_class then
+		table.Inherit(BOT, TLG.BOTS[base_class]) -- цепляем к BOT .BaseClass
+		setmetatable(BOT, {__index = BOT.BaseClass})
+	else
+		setmetatable(BOT, {__index = TLG.GetMeta("BOT")})
+	end
 
-	TLG.BOTS[sName] = OBJ
+	return BOT
+end
 
-	return OBJ
+-- как newbot, только обертка, чтобы самому не надо было некоторые действия делать
+function TLG.CreateBot(class, base_class, token)
+	local BOT = TLG.NewBot(class, base_class)
+	BOT.token = token
+	BOT.id    = tonumber(token:match("^(%d+)")) -- :(.+)$
+
+	return BOT
 end
 
 function TLG.GetBot(sName)
@@ -74,7 +79,7 @@ end
 	OBJECTS
 ---------------------------------------------------------------------------]]
 function TLG.SetMeta(tab, uid)
-	return setmetatable(tab, TLG.GetMeta(uid))
+	return tab and setmetatable(tab, TLG.GetMeta(uid))
 end
 
 function TLG.GetMeta(uid)

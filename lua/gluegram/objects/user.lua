@@ -11,6 +11,10 @@ function USER:ID()
 	return self.id
 end
 
+function USER:IsBot()
+	return self.is_bot
+end
+
 function USER:Name()
 	return tostring(self)
 end

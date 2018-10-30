@@ -1,0 +1,39 @@
+-- change extension to lua and replace token
+
+--                        This bot class | Inherit from | Bot token. Retrieve at t.me/BotFather
+local BOT = TLG.CreateBot("example_bot",   "base_auth",   "123456789:AAHB8DggDgggI-unSJTfOlnt_qpJ2aWIdE")
+
+-- for custom update methods
+-- SOCKY:NewApp("gluegram", function(tData) BOT:PushUpdate(tData) end)
+
+-- check updates every 10 seconds
+BOT:SetPolling(10)
+
+
+--[[-------------------------------------------------------------------------
+	Commands
+---------------------------------------------------------------------------]]
+-- useful if you have several servers
+BOT:CreateAuthCommands() -- /login;/exit (from base_auth bot)
+
+BOT:AddCommand("start", function(MSG, args, argss)
+	PrintTable({MSG = MSG, args = args, argss = argss})
+	return
+		"You ran /start command. Look at console for debug info.\n\n" ..
+		"Now type /login example_bot, then /checkauth"
+end)
+
+-- inherited from base_auth bot
+BOT:AddNeedAuthCMD("CheckAuth", function(MSG, args)
+	return "If you see this message then you successful logged in, " .. MSG:From():Name()
+end)
+
+
+--[[-------------------------------------------------------------------------
+	Hooks
+	Another hooks like OnMessage in base.lua
+---------------------------------------------------------------------------]]
+function BOT:OnUpdate(UPD)
+	print("Update object #" .. UPD:ID() .. " from " .. self:GetClass() .. ". Extra info in console")
+	PrintTable(UPD) -- https://img.qweqwe.ovh/1540837295842.png
+end

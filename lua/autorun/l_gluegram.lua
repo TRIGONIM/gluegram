@@ -34,6 +34,8 @@ TLG.Include("core.lua")
 TLG.LoadFolder("objects")
 TLG.LoadFolder("objects/custom")
 
+TLG.LoadFolder("base_bots")
+
 TLG.Include("methods.lua")
 TLG.LoadFolder("methods")
 TLG.LoadFolder("methods/objects")
