@@ -1,8 +1,11 @@
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("sendMediaGroup")
 
--- disable_notification
 -- reply_to_message_id
+
+function METHOD:Mute(bMute)
+	return self:SetParam("disable_notification", bMute ~= false)
+end
 
 function BOT_MT:MediaGroup(chat_id, tMedia) -- 2-10 items
 	return self:Request(METHOD)

@@ -1,6 +1,6 @@
 -- https://core.telegram.org/bots/api#sendmessage
 
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("sendMessage")
 
 function METHOD:SetChatID(iChatID) -- !!!
@@ -30,14 +30,10 @@ function METHOD:DisablePreview(bDisable)
 	return self:SetParam("disable_web_page_preview", bDisable ~= false)
 end
 
-function METHOD:DisableNotification(bDisable)
-	return self:SetParam("disable_notification", bDisable ~= false)
+function METHOD:Mute(bMute)
+	return self:SetParam("disable_notification", bMute ~= false)
 end
 
--- шаблон
-function TLG.Message(BOT)
-	return BOT:Request(METHOD, "Message")
-end
 
 -- Создаем объект сообщения
 function BOT_MT:Message(iTo, sText)
@@ -45,7 +41,7 @@ function BOT_MT:Message(iTo, sText)
 		iTo = iTo["id"]
 	end
 
-	return TLG.Message(self)
+	return self:Request(METHOD, "Message")
 		:SetChatID(iTo)
 		:SetText(sText)
 end

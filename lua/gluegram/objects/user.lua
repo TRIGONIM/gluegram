@@ -1,6 +1,6 @@
 local USER = TLG.NewObjectBase("User")
 USER.__tostring = function(self)
-	return self.username and ("@" .. self.username) or self.first_name
+	return self:Mention() or self.first_name
 end
 USER.__concat = function(a,b)
 	return tostring(a) .. tostring(b) -- :|
@@ -32,4 +32,12 @@ end
 -- string
 function USER:Login()
 	return self.username
+end
+
+
+--[[---------------------------------
+	CUSTOM
+-----------------------------------]]
+function USER:Mention()
+	return self.username and "@" .. self.username
 end

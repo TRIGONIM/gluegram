@@ -34,3 +34,7 @@ end
 function MSG:Caption()
 	return self.caption
 end
+
+function MSG:Sticker()
+	return TLG.SetMeta(self.sticker,"Sticker")
+end

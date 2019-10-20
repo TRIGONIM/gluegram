@@ -1,29 +1,16 @@
 TLG.BOTS = TLG.BOTS or {}
 
-setmetatable(TLG, {
-	__call = function(self, ...)
-		return self.CreateBot(...)
-	end
-})
-
-
 --[[-------------------------------------------------------------------------
 	MISCELLANEOUS
 ---------------------------------------------------------------------------]]
-function TLG.LogError(err)
-	local sErr = isstring(err) and err
-	if not sErr then
-		sErr = "==== " .. os.date("%Y-%m-%d %H:%M:%S") .. " ===="
-		for typ,val in pairs(err) do
-			sErr = sErr .. "\n" .. typ .. ": " .. val
-		end
-		sErr = sErr .. "\n========= [TLG ERR] =========\n\n"
-	else
-		sErr = "[TLG ERR] " .. sErr
-	end
+function TLG.LogError(sErr)
+	local msg = ""
+	msg = msg .. "==== " .. os.date("%Y-%m-%d %H:%M:%S") .. " ===="
+	msg = msg .. "\n" .. sErr
+	msg = msg .. "\n========= [TLG ERR] =========\n\n"
 
-	print("\n\n\n" .. sErr)
-	file.Append("gluegram/telegram_errors.txt",sErr)
+	MsgN(msg)
+	file.Append("gluegram/telegram_errors.txt", msg)
 	-- debug.Trace()
 end
 
@@ -37,31 +24,39 @@ function TLG.EscapeMarkdown(text)
 end
 -- print( TLG.EscapeMarkdown("[abc](https://google.com) _italic_ `monow` *bold*") )
 
+local function esc(name)
+	return name:gsub("]","}"):gsub("%[","{")
+end
+
+function TLG.MarkdownURL(name, url)
+	return "[" .. esc(name) .. "](" .. url .. ")"
+end
+
+function TLG.Mention(nick, tlg_id)
+	return TLG.MarkdownURL(nick, "tg://user?id=" .. tlg_id)
+end
+
 
 --[[-------------------------------------------------------------------------
 	BOTS
 ---------------------------------------------------------------------------]]
--- Регает полноценного бота, которого можно
--- использовать как базу или как отдельную единицу
-function TLG.NewBot(class, base_class)
-	assert(!base_class or TLG.BOTS[base_class], "Attempt to inherit non existent bot class: " .. tostring(base_class))
+function TLG.Bot(class)
+	TLG.BOTS[class] = {class = class}
+	return TLG.BOTS[class]
+end
 
-	TLG.BOTS[class] = TLG.BOTS[class] or {class = class}
-	local BOT = TLG.BOTS[class]
+function TLG.BotFrom(base_class, class)
+	assert(TLG.BOTS[base_class], "Attempt to inherit non existent bot class: " .. tostring(base_class))
 
-	if base_class then
-		table.Inherit(BOT, TLG.BOTS[base_class]) -- цепляем к BOT .BaseClass
-		setmetatable(BOT, {__index = BOT.BaseClass})
-	else
-		setmetatable(BOT, {__index = TLG.GetMeta("BOT")})
-	end
+	local BOT = TLG.Bot(class)
+	table.Inherit(BOT, TLG.BOTS[base_class]) -- цепляем к BOT .BaseClass
+	setmetatable(BOT, {__index = BOT.BaseClass}) -- ищем у родителя отсутствующие методы
 
 	return BOT
 end
 
--- как newbot, только обертка, чтобы самому не надо было некоторые действия делать
 function TLG.CreateBot(class, base_class, token)
-	local BOT = TLG.NewBot(class, base_class)
+	local BOT = TLG.BotFrom(base_class, class)
 	BOT.token = token
 	BOT.id    = tonumber(token:match("^(%d+)")) -- :(.+)$
 
@@ -79,17 +74,13 @@ end
 	OBJECTS
 ---------------------------------------------------------------------------]]
 function TLG.SetMeta(tab, uid)
-	return tab and setmetatable(tab, TLG.GetMeta(uid))
-end
-
-function TLG.GetMeta(uid)
-	return FindMetaTable("TLG." .. uid)
+	local MT = assert(FindMetaTable("TLG." .. uid), "No meta: " .. (uid or "falsy"))
+	return tab and setmetatable(tab, MT)
 end
 
 function TLG.NewObjectBase(uid)
-	if TLG.GetMeta(uid) then
-		return TLG.GetMeta(uid)
-	end
+	local MT = FindMetaTable("TLG." .. uid)
+	if MT then return MT end
 
 	local OBJ = {}
 	OBJ.__index = OBJ

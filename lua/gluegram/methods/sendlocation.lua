@@ -1,5 +1,5 @@
 -- https://core.telegram.org/bots/api#sendlocation
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("sendLocation")
 
 function METHOD:SetLive(live_period) -- 60-86400

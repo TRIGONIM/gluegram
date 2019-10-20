@@ -1,5 +1,5 @@
 -- https://core.telegram.org/bots/api#editMessageLiveLocation
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("editMessageLiveLocation")
 
 function METHOD:ByMessage(chat_id, message_id)

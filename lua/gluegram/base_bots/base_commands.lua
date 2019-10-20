@@ -1,4 +1,4 @@
-local BOT = TLG.NewBot("commands", "base")
+local BOT = TLG.GetBot("commands") or TLG.BotFrom("base", "commands")
 
 function BOT:AddCommand(sCmd, fCallback)
 	sCmd = string.lower(sCmd)

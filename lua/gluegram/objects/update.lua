@@ -1,7 +1,7 @@
 local UPD = TLG.NewObjectBase("Update")
 
 -- int
-function UPD:UpdateID()
+function UPD:ID()
 	return self.update_id
 end
 

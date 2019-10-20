@@ -1,4 +1,4 @@
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("editMessageText")
 
 function METHOD:SetChatID(iID)
@@ -51,3 +51,6 @@ function BOT_MT:EditMessage(MSG, sText, bAppend)
 		:SetEditMessageID(msg_id)
 		:SetChatID(chat_id)
 end
+
+-- TLG_CORE_BOT:Message(TLG_AMD, "key1: value1\nkey2: value2"):Send(PRINT)
+-- TLG_CORE_BOT:EditMessage(463546, TLG_AMD, "key3: value3\nkey4: value4"):Send(PRINT)

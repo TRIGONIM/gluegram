@@ -5,14 +5,10 @@ local MEDIA_MT = {}
 MEDIA_MT.__index = MEDIA_MT
 
 function MEDIA_MT:AddPhoto(photo, caption, parse_mode)
-	if caption then
-		caption = (string.utf8sub or string.sub)(caption, 1,200)
-	end
-
 	table.insert(self,{
 		type = "photo",
 		media = photo, -- url or tlg id
-		caption = caption,
+		caption = caption, -- 1024 chars. Был utf8sub, но с ним чет телега ругалась на битое сообщение
 		parse_mode = parse_mode, -- html, markdown
 	})
 end

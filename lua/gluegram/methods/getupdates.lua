@@ -1,5 +1,5 @@
 -- https://core.telegram.org/bots/api#getupdates
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("getUpdates")
 
 -- allowed_updates
@@ -10,6 +10,7 @@ function METHOD:SetOffset(i)
 	return self:SetParam("offset", i)
 end
 
-function BOT_MT:GetUpdates()
+function BOT_MT:GetUpdates(iOffset_)
 	return self:Request(METHOD) -- list of Update objects
+		:SetOffset(iOffset_)
 end

@@ -1,5 +1,5 @@
 -- https://core.telegram.org/bots/api#getme
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("getMe")
 
 function BOT_MT:GetMe(cb)

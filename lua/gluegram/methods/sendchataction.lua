@@ -1,4 +1,4 @@
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("sendChatAction")
 
 function METHOD:SendTo(chat_id)

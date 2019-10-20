@@ -6,8 +6,8 @@ local BOT = TLG.CreateBot("example_bot",   "base_auth",   "123456789:AAHB8DggDgg
 -- for custom update methods
 -- SOCKY:NewApp("gluegram", function(tData) BOT:PushUpdate(tData) end)
 
--- check updates every 10 seconds
-BOT:SetPolling(10)
+-- check updates by one by one http queries to TLG servers
+BOT:StartPolling()
 
 
 --[[-------------------------------------------------------------------------

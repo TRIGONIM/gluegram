@@ -10,6 +10,9 @@ MESSAGE:SetReplyMarkup(IKB)
 local IKB  = {} -- InlineKeyBoard
 IKB.__index  = IKB
 
+function IKB:GetLines()
+	return self.inline_keyboard
+end
 
 function IKB:Line(...) -- объекты кнопок через запятые
 	table.insert(self.inline_keyboard,{...})

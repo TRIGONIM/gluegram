@@ -1,7 +1,7 @@
 -- https://core.telegram.org/bots/api#sendphoto
 -- https://core.telegram.org/bots/api#sending-files
 
-local BOT_MT = TLG.GetMeta("BOT")
+local BOT_MT = TLG.GetBot("base")
 local METHOD = TLG.NewMethod("sendPhoto")
 
 -- 0-200 characters
@@ -9,9 +9,15 @@ function METHOD:SetCaption(s)
 	return self:SetParam("caption", (string.utf8sub or string.sub)(s, 1,200))
 end
 
--- parse_mode
+function METHOD:ReplyTo(iReplyToMessageId)
+	return self:SetParam("reply_to_message_id", iReplyToMessageId)
+end
+
+function METHOD:SetParseMode(sMode)
+	return self:SetParam("parse_mode", sMode)
+end
+
 -- disable_notification
--- reply_to_message_id
 -- reply_markup
 
 

@@ -6,16 +6,11 @@ function PS:ID()
 end
 
 -- !! int
-function PS:Width()
-	return self.width
-end
-
--- !! int
-function PS:Height()
-	return self.height
+function PS:Size()
+	return self.width, self.height
 end
 
 -- int
-function PS:Size()
+function PS:FileSize()
 	return self.file_size
 end

@@ -3,7 +3,7 @@
 ---------------------------------------------------------------------------]]
 
 -- Конкретный бот
-local BOT = TLG.NewBot("base_auth", "commands")
+local BOT = TLG.GetBot("base_auth") or TLG.BotFrom("commands", "base_auth")
 
 -- #todo user_id instead of USER
 function BOT:Auth(USER, bAuth) -- не чат, а юзер, чтобы в чатах случайно не дать доступ всем
