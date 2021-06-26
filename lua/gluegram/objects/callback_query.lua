@@ -16,5 +16,6 @@ end
 
 -- string
 function CBQ:Data()
-	return pon.decode(self.data)
+	local ok,res = pcall(pon.decode, self.data)
+	return ok and res -- #todo remove workaround after move to ggram
 end

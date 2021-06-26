@@ -89,6 +89,9 @@ local function pushif(f_, ...)
 end
 
 function TLG.SendRequest(token, method, params, cb_obj_, fOnSuccess_, fOnError_)
+	-- local paramss = http.BuildQuery(params) --:URLEncode()
+	-- print("https://api.telegram.org/bot" .. token .. "/" .. method .. "?" .. paramss)
+
 	http.Post(
 		"https://api.telegram.org/bot" .. token .. "/" .. method, params,function(dat)
 			dat = assert(util.JSONToTable(dat), "Телега прислала мусор: " .. tostring(dat))
